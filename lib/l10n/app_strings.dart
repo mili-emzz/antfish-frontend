@@ -101,4 +101,33 @@ abstract final class AppStrings {
   static const String templateComingSoon =
       'Esta sección estará disponible pronto.';
   static const String alertDismiss = 'Cerrar aviso';
+
+  // Navegación inferior (BottomNav en App.tsx)
+  static const String navHome = 'Inicio';
+  static const String navHistory = 'Historial';
+  static const String navScan = 'Escanear';
+  static const String navScanSemantics = 'Escanear ahora';
+  static const String navStats = 'Métricas';
+  static const String navProfile = 'Perfil';
+
+  // Encabezados de secciones del shell (App.tsx)
+  static const String homeEyebrow = 'ESCÁNER INTELIGENTE';
+  static const String homeTitle = 'Tu espacio está protegido.';
+  static const String homeCopy =
+      'Pega un enlace o mensaje sospechoso. Nosotros hacemos el resto.';
+
+  static const String historyEyebrow = 'REGISTRO SEGURO';
+  static const String historyTitle = 'Tu historial';
+  static const String historyCopy =
+      'Consulta tus análisis anteriores y vuelve a revisar los resultados.';
+
+  static const String statsEyebrow = 'TU IMPACTO';
+  static const String statsTitle = 'Métricas de protección';
+  static const String statsCopy =
+      'Cada análisis suma una capa más de tranquilidad digital.';
+
+  static const String profileEyebrow = 'CUENTA PROTEGIDA';
+  static const String profileTitle = 'Tu perfil';
+  static const String profileCopy =
+      'Administra tu espacio, privacidad y preferencias.';
 }

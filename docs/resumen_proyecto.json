@@ -254,14 +254,15 @@
   "ultimo_resumen_y_proximos_pasos": {
     "decisiones_tecnicas_tomadas": [
       "DT-10: Regla mandatoria del sistema (.agents/rules/sync_resumen_proyecto.md) y DoD en AGENTS.md para sincronizar docs/resumen_proyecto.json al finalizar cada tarea o cambio.",
-      "DT-11: Implementación de plantilla UI pura de autenticación (Login y Registro) en Flutter Feature-First bajo estética Dark Crystal Cyber-Shield, responsive adaptativo (>800px dos columnas con visual hero narrativo; <=800px una columna; <=520px compacto), validadores puros y alertas sin dependencias externas bloqueantes."
+      "DT-11: Implementación de plantilla UI pura de autenticación (Login y Registro) en Flutter Feature-First bajo estética Dark Crystal Cyber-Shield, responsive adaptativo (>800px dos columnas con visual hero narrativo; <=800px una columna; <=520px compacto), validadores puros y alertas sin dependencias externas bloqueantes.",
+      "DT-12: Migración Fase 1 del prototipo 'App de Escaneo Cyber-Shield' (App.tsx): creación de AppShell, CrystalBottomNav (con botón central elevado de escaneo) y PageHeader en core/ui/, y registro de las rutas /home, /history, /stats y /profile en AppRoutes y app.dart."
     ],
-    "ultimo_resumen": "Etapa 1 completada: Login y Registro (plantilla UI responsive). Añadida VerifyEmailScreen (CU-14, RF-06.2) como plantilla SIN lógica: OtpCodeInput de 6 casillas, vigencia de 10 min solo informativa (sin cuenta regresiva), 'Reenviar código' deshabilitado y 'Verificar' solo valida formato (6 dígitos) y muestra aviso. Ruta /verify-email accesible con --dart-define=INITIAL_ROUTE=/verify-email. 'flutter analyze' limpio y 'flutter test' con 32 pruebas pasando.",
+    "ultimo_resumen": "Fase 1 de migración a Flutter completada: implementados AppShell (lib/core/ui/layout/app_shell.dart), CrystalBottomNav con botón central elevado de escaneo (lib/core/ui/widgets/crystal_bottom_nav.dart) y PageHeader (lib/core/ui/widgets/page_header.dart). Añadidas las rutas /home, /history, /stats y /profile en AppRoutes y conectadas en AntFishApp.",
     "proximos_pasos_inmediatos": [
-      "1. Ratificar formalmente el gestor de estado (Riverpod vs Bloc - DPF-01) y aprobar dependencias en pubspec.yaml (DPF-02).",
-      "2. Instalar dio y flutter_secure_storage para implementar interceptores de red y refresco de tokens (core/network y core/storage).",
-      "3. Configurar internacionalización en lib/l10n/ (AppLocalizations en español).",
-      "4. Conectar Login, Registro y Verificación a los endpoints reales cuando exista backend. Al conectar VerifyEmailScreen: POST /auth/verify-email, temporizador de 600 s, POST /auth/resend-code (máx. 3/hora, HTTP 429), tope de 5 intentos y navegación desde el registro con el correo (SessionPendingVerification)."
+      "1. Fase 2: Implementar HomeScreen (pantalla principal de escaneo con saludo, SecurityRing, ScannerCard URL/SMS, RiskTrafficLight, ResultCard y actividad reciente).",
+      "2. Fase 3: Implementar HistoryScreen (filtros Todos/Enlaces/Mensajes y listado de análisis).",
+      "3. Fase 4: Implementar StatsScreen (panel de métricas de protección, grid 2x2, desglose de nivel de riesgo e insight).",
+      "4. Fase 5: Implementar ProfileScreen (tarjeta de perfil verificado, lista de ajustes y botón de cierre de sesión)."
     ]
   }
 }

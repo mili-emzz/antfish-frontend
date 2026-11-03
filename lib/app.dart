@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
 
 import 'core/router/app_routes.dart';
+import 'core/ui/layout/app_shell.dart';
 import 'core/ui/theme/app_theme.dart';
+import 'core/ui/widgets/app_alert.dart';
+import 'core/ui/widgets/crystal_bottom_nav.dart';
+import 'core/ui/widgets/page_header.dart';
 import 'features/auth/auth.dart';
+import 'l10n/app_strings.dart';
 
 /// Punto de entrada del widget raíz de AntFish.
 ///
 /// Navegación provisional con rutas nombradas hasta integrar `go_router`
 /// con guards de sesión (DPF-02).
 class AntFishApp extends StatelessWidget {
-  const AntFishApp({super.key});
+  const AntFishApp({super.key, this.initialRoute});
+
+  /// Ruta inicial opcional (útil para pruebas de widgets). Si no se indica,
+  /// toma `INITIAL_ROUTE` de `--dart-define` o [AppRoutes.login].
+  final String? initialRoute;
 
   @override
   Widget build(BuildContext context) {
@@ -18,11 +27,13 @@ class AntFishApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
       // Para previsualizar otra pantalla:
-      // flutter run -d chrome --dart-define=INITIAL_ROUTE=/verify-email
-      initialRoute: const String.fromEnvironment(
-        'INITIAL_ROUTE',
-        defaultValue: AppRoutes.login,
-      ),
+      // flutter run -d chrome --dart-define=INITIAL_ROUTE=/home
+      initialRoute:
+          initialRoute ??
+          const String.fromEnvironment(
+            'INITIAL_ROUTE',
+            defaultValue: AppRoutes.login,
+          ),
       onGenerateRoute: _onGenerateRoute,
     );
   }
@@ -33,6 +44,10 @@ class AntFishApp extends StatelessWidget {
       AppRoutes.verifyEmail => VerifyEmailScreen(
         email: settings.arguments as String?,
       ),
+      AppRoutes.home => const _AppShellHost(initialTab: AppTab.home),
+      AppRoutes.history => const _AppShellHost(initialTab: AppTab.history),
+      AppRoutes.stats => const _AppShellHost(initialTab: AppTab.stats),
+      AppRoutes.profile => const _AppShellHost(initialTab: AppTab.profile),
       _ => const LoginScreen(),
     };
 
@@ -46,6 +61,79 @@ class AntFishApp extends StatelessWidget {
       transitionsBuilder: (_, animation, _, child) => FadeTransition(
         opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
         child: child,
+      ),
+    );
+  }
+}
+
+/// Anfitrión del shell principal que conmuta entre las 4 pestañas de App.tsx
+/// (`home`, `history`, `stats`, `profile`).
+///
+/// Las vistas internas se irán sustituyendo en las Fases 2 a 5 por
+/// `HomeScreen`, `HistoryScreen`, `StatsScreen` y `ProfileScreen`.
+class _AppShellHost extends StatefulWidget {
+  const _AppShellHost({required this.initialTab});
+
+  final AppTab initialTab;
+
+  @override
+  State<_AppShellHost> createState() => _AppShellHostState();
+}
+
+class _AppShellHostState extends State<_AppShellHost> {
+  late AppTab _currentTab = widget.initialTab;
+
+  @override
+  void didUpdateWidget(covariant _AppShellHost oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialTab != widget.initialTab) {
+      _currentTab = widget.initialTab;
+    }
+  }
+
+  void _selectTab(AppTab tab) {
+    if (_currentTab == tab) return;
+    setState(() => _currentTab = tab);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final (eyebrow, title, copy) = switch (_currentTab) {
+      AppTab.home => (
+        AppStrings.homeEyebrow,
+        AppStrings.homeTitle,
+        AppStrings.homeCopy,
+      ),
+      AppTab.history => (
+        AppStrings.historyEyebrow,
+        AppStrings.historyTitle,
+        AppStrings.historyCopy,
+      ),
+      AppTab.stats => (
+        AppStrings.statsEyebrow,
+        AppStrings.statsTitle,
+        AppStrings.statsCopy,
+      ),
+      AppTab.profile => (
+        AppStrings.profileEyebrow,
+        AppStrings.profileTitle,
+        AppStrings.profileCopy,
+      ),
+    };
+
+    return AppShell(
+      currentTab: _currentTab,
+      onTabSelected: _selectTab,
+      onScanPressed: () => _selectTab(AppTab.home),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          PageHeader(eyebrow: eyebrow, title: title, copy: copy),
+          const AppAlert(
+            message: AppStrings.templateComingSoon,
+            variant: AlertVariant.info,
+          ),
+        ],
       ),
     );
   }
