@@ -126,43 +126,55 @@ class SecondaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool enabled = onPressed != null;
     final radius = BorderRadius.circular(13);
 
     return Semantics(
       button: true,
+      enabled: enabled,
       label: label,
       excludeSemantics: true,
-      child: Material(
-        color: const Color(0x09FFFFFF),
-        shape: RoundedRectangleBorder(
-          borderRadius: radius,
-          side: const BorderSide(color: Color(0x1AFFFFFF)),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onPressed,
-          hoverColor: const Color(0x0FFFFFFF),
-          splashColor: const Color(0x1FD7BA89),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 48),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (leading != null) ...[leading!, const SizedBox(width: 11)],
-                  Flexible(
-                    child: Text(
-                      label,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.button.copyWith(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFFD9D1DC),
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: enabled ? 1 : 0.5,
+        child: Material(
+          color: const Color(0x09FFFFFF),
+          shape: RoundedRectangleBorder(
+            borderRadius: radius,
+            side: const BorderSide(color: Color(0x1AFFFFFF)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onPressed,
+            hoverColor: const Color(0x0FFFFFFF),
+            splashColor: const Color(0x1FD7BA89),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (leading != null) ...[
+                      leading!,
+                      const SizedBox(width: 11),
+                    ],
+                    Flexible(
+                      child: Text(
+                        label,
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.button.copyWith(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFFD9D1DC),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

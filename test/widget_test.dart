@@ -1,4 +1,5 @@
 import 'package:antfish/app.dart';
+import 'package:antfish/core/ui/widgets/app_buttons.dart';
 import 'package:antfish/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -59,67 +60,56 @@ void main() {
     });
   });
 
-  group('Comportamiento del formulario', () {
-    testWidgets('Login vacío muestra errores y un aviso', (tester) async {
-      await _pumpAt(tester, const Size(390, 844));
-
-      await tester.tap(find.text(AppStrings.loginSubmit));
-      await tester.pumpAndSettle();
-
-      expect(find.text(AppStrings.validationEmailRequired), findsOneWidget);
-      expect(find.text(AppStrings.validationPasswordRequired), findsOneWidget);
-      expect(find.text(AppStrings.validationFormHasErrors), findsOneWidget);
-    });
-
-    testWidgets('Login válido muestra carga y luego el aviso de plantilla', (
+  group('Comportamiento del formulario (plantilla sin backend)', () {
+    testWidgets('Botones que requieren backend en Login están deshabilitados', (
       tester,
     ) async {
       await _pumpAt(tester, const Size(390, 844));
 
-      await tester.enterText(find.byType(TextFormField).at(0), 'a@b.com');
-      await tester.enterText(find.byType(TextFormField).at(1), 'secreta');
-      await tester.tap(find.text(AppStrings.loginSubmit));
-      await tester.pump();
+      final submit = tester.widget<PrimaryButton>(
+        find.widgetWithText(PrimaryButton, AppStrings.loginSubmit),
+      );
+      expect(submit.onPressed, isNull);
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      final forgot = tester.widget<LinkButton>(
+        find.widgetWithText(LinkButton, AppStrings.loginForgotPassword),
+      );
+      expect(forgot.onPressed, isNull);
 
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-      expect(find.text(AppStrings.templateBackendPending), findsOneWidget);
+      final google = tester.widget<SecondaryButton>(
+        find.widgetWithText(SecondaryButton, AppStrings.authGoogle),
+      );
+      expect(google.onPressed, isNull);
     });
 
-    testWidgets('Mostrar y ocultar la contraseña', (tester) async {
+    testWidgets(
+      'Botones que requieren backend en Registro están deshabilitados',
+      (tester) async {
+        await _pumpAt(tester, const Size(390, 844));
+        await tester.tap(find.text(AppStrings.authTabRegister));
+        await tester.pumpAndSettle();
+
+        final submit = tester.widget<PrimaryButton>(
+          find.widgetWithText(PrimaryButton, AppStrings.registerSubmit),
+        );
+        expect(submit.onPressed, isNull);
+
+        final google = tester.widget<SecondaryButton>(
+          find.widgetWithText(SecondaryButton, AppStrings.authGoogle),
+        );
+        expect(google.onPressed, isNull);
+      },
+    );
+
+    testWidgets('Mostrar y ocultar la contraseña funciona localmente', (
+      tester,
+    ) async {
       await _pumpAt(tester, const Size(390, 844));
 
       expect(find.byTooltip(AppStrings.fieldPasswordShow), findsOneWidget);
       await tester.tap(find.byTooltip(AppStrings.fieldPasswordShow));
       await tester.pump();
       expect(find.byTooltip(AppStrings.fieldPasswordHide), findsOneWidget);
-    });
-
-    testWidgets('Registro exige nombre y contraseña de 8 caracteres', (
-      tester,
-    ) async {
-      await _pumpAt(tester, const Size(390, 844));
-      await tester.tap(find.text(AppStrings.authTabRegister));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(find.byType(TextFormField).at(2), '123');
-      await tester.ensureVisible(find.text(AppStrings.registerSubmit));
-      await tester.tap(find.text(AppStrings.registerSubmit));
-      await tester.pumpAndSettle();
-
-      expect(find.text(AppStrings.validationNameRequired), findsOneWidget);
-      expect(find.text(AppStrings.validationPasswordTooShort), findsOneWidget);
-    });
-
-    testWidgets('Acciones sin backend muestran aviso "próximamente"', (
-      tester,
-    ) async {
-      await _pumpAt(tester, const Size(390, 844));
-
-      await tester.tap(find.text(AppStrings.loginForgotPassword));
-      await tester.pump();
-      expect(find.text(AppStrings.templateComingSoon), findsOneWidget);
     });
   });
 }

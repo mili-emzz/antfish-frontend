@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/router/app_routes.dart';
-import '../../../../core/ui/widgets/app_alert.dart';
 import '../../../../core/ui/widgets/app_buttons.dart';
 import '../../../../core/ui/widgets/crystal_text_field.dart';
 import '../../../../l10n/app_strings.dart';
@@ -12,8 +11,11 @@ import '../widgets/auth_scaffold.dart';
 
 /// Pantalla de registro local con nombre, correo y contraseña (CU-13, RF-06.1).
 ///
-/// PLANTILLA: todavía no hay backend. El envío solo valida el formulario,
-/// muestra el estado de carga y un aviso informativo.
+/// PLANTILLA SIN BACKEND:
+/// - Los campos del formulario, mostrar/ocultar contraseña y el cambio de
+///   pestaña funcionan localmente.
+/// - Los botones que requieren el backend (`Crear cuenta segura` y
+///   `Continuar con Google`) permanecen deshabilitados (`onPressed: null`).
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -29,10 +31,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailFocus = FocusNode();
   final _passwordFocus = FocusNode();
 
-  bool _isSubmitting = false;
-  String? _alertMessage;
-  AlertVariant _alertVariant = AlertVariant.info;
-
   @override
   void dispose() {
     _nameController.dispose();
@@ -41,37 +39,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _emailFocus.dispose();
     _passwordFocus.dispose();
     super.dispose();
-  }
-
-  Future<void> _submit() async {
-    if (_isSubmitting) return;
-    FocusScope.of(context).unfocus();
-
-    if (!(_formKey.currentState?.validate() ?? false)) {
-      setState(() {
-        _alertMessage = AppStrings.validationFormHasErrors;
-        _alertVariant = AlertVariant.warning;
-      });
-      return;
-    }
-
-    setState(() {
-      _isSubmitting = true;
-      _alertMessage = null;
-    });
-
-    // TODO(Etapa 2): POST /api/v1/auth/register {email, password, nombre}.
-    // - Éxito → SessionPendingVerification(email) → pantalla de verificación.
-    // - 409 → ConflictFailure (correo ya registrado).
-    // - Nunca reintentar automáticamente este POST (AGENTS.md §7).
-    await Future<void>.delayed(const Duration(milliseconds: 900));
-    if (!mounted) return;
-
-    setState(() {
-      _isSubmitting = false;
-      _alertMessage = AppStrings.templateBackendPending;
-      _alertVariant = AlertVariant.info;
-    });
   }
 
   @override
@@ -96,27 +63,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOut,
-                  child: _alertMessage == null
-                      ? const SizedBox(width: double.infinity)
-                      : Padding(
-                          padding: const EdgeInsets.only(bottom: 18),
-                          child: AppAlert(
-                            message: _alertMessage!,
-                            variant: _alertVariant,
-                            onDismiss: () =>
-                                setState(() => _alertMessage = null),
-                          ),
-                        ),
-                ),
                 CrystalTextField(
                   label: AppStrings.fieldNameLabel,
                   hint: AppStrings.fieldNameHint,
                   icon: Icons.person_outline_rounded,
                   controller: _nameController,
-                  enabled: !_isSubmitting,
                   keyboardType: TextInputType.name,
                   textCapitalization: TextCapitalization.words,
                   textInputAction: TextInputAction.next,
@@ -131,7 +82,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   icon: Icons.mail_outline_rounded,
                   controller: _emailController,
                   focusNode: _emailFocus,
-                  enabled: !_isSubmitting,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
                   autofillHints: const [AutofillHints.email],
@@ -146,22 +96,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   icon: Icons.lock_outline_rounded,
                   controller: _passwordController,
                   focusNode: _passwordFocus,
-                  enabled: !_isSubmitting,
                   isPassword: true,
                   textInputAction: TextInputAction.done,
                   autofillHints: const [AutofillHints.newPassword],
                   validator: AuthValidators.newPassword,
-                  onFieldSubmitted: (_) => _submit(),
                 ),
                 const SizedBox(height: 22),
-                PrimaryButton(
+                const PrimaryButton(
                   label: AppStrings.registerSubmit,
-                  isLoading: _isSubmitting,
-                  onPressed: _submit,
+                  // Deshabilitado hasta conectar POST /api/v1/auth/register.
+                  onPressed: null,
                 ),
                 const SizedBox(height: 14),
                 const AuthPrivacyNote(),
-                AuthFormFooter(enabled: !_isSubmitting),
+                const AuthFormFooter(),
               ],
             ),
           ),

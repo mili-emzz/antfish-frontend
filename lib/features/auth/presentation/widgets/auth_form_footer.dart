@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/ui/theme/app_text_styles.dart';
-import '../../../../core/ui/widgets/app_alert.dart';
 import '../../../../core/ui/widgets/app_buttons.dart';
 import '../../../../core/ui/widgets/labeled_divider.dart';
 import '../../../../l10n/app_strings.dart';
@@ -29,14 +28,15 @@ class AuthPrivacyNote extends StatelessWidget {
 }
 
 /// Pie común de Login y Registro: separador, Google y aviso legal.
+///
+/// PLANTILLA SIN BACKEND: los botones que requieren integración con el
+/// servidor (`POST /api/v1/auth/google` y enlaces legales) permanecen
+/// deshabilitados (`onPressed: null`).
 class AuthFormFooter extends StatelessWidget {
-  const AuthFormFooter({super.key, required this.enabled});
+  const AuthFormFooter({super.key, this.enabled = false});
 
-  /// Se deshabilita mientras hay un envío en curso.
+  /// Reservado para activar las acciones cuando se conecte el backend.
   final bool enabled;
-
-  void _comingSoon(BuildContext context) =>
-      showAppSnackBar(context, AppStrings.templateComingSoon);
 
   @override
   Widget build(BuildContext context) {
@@ -58,11 +58,11 @@ class AuthFormFooter extends StatelessWidget {
         const SizedBox(height: 26),
         const LabeledDivider(label: AppStrings.authDivider),
         const SizedBox(height: 20),
-        SecondaryButton(
+        const SecondaryButton(
           label: AppStrings.authGoogle,
-          // TODO(Etapa 2): google_sign_in → POST /api/v1/auth/google (RF-06.4).
-          onPressed: enabled ? () => _comingSoon(context) : null,
-          leading: const _GoogleGlyph(),
+          // Deshabilitado hasta conectar google_sign_in → POST /api/v1/auth/google (RF-06.4).
+          onPressed: null,
+          leading: _GoogleGlyph(),
         ),
         const SizedBox(height: 12),
         Wrap(
@@ -73,13 +73,13 @@ class AuthFormFooter extends StatelessWidget {
             LinkButton(
               label: AppStrings.authLegalTerms,
               style: legalLinkStyle,
-              onPressed: () => _comingSoon(context),
+              onPressed: null,
             ),
             Text(AppStrings.authLegalAnd, style: legalStyle),
             LinkButton(
               label: AppStrings.authLegalPrivacy,
               style: legalLinkStyle,
-              onPressed: () => _comingSoon(context),
+              onPressed: null,
             ),
           ],
         ),
