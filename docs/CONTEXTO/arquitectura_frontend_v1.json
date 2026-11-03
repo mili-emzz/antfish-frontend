@@ -1,0 +1,287 @@
+{
+  "metadata": {
+    "nombre_proyecto": "AntFish",
+    "alcance": "Arquitectura de la app móvil Flutter (Android e iOS) que consume la API REST de AntFish",
+    "ruta_en_repo": "antfish_app/",
+    "version_documento": "1.0-propuesta",
+    "estado": "Propuesta pendiente de aprobación del equipo",
+    "fecha": "2026-11-02",
+    "fuentes_de_verdad_por_precedencia": [
+      "CONTEXTO_AntFish_V2.md (v2.1)",
+      "antfish_modelo_nosql.json (v2.2)",
+      "arquitectura_backend_v2.json",
+      "Antfish_Casos_de_Uso.md (v2.1)"
+    ],
+    "regla_ante_contradiccion": "Prevalece el contrato del backend; cualquier discrepancia se registra en cove_verificacion y se cierra con el equipo de backend antes de implementar la pantalla afectada.",
+    "convenciones": {
+      "codigo": "Dart en inglés",
+      "textos_al_usuario": "Español, centralizados en l10n/",
+      "campos_json_del_api": "Se consumen tal como los expone el backend (español) y se mapean a modelos Dart en data/dto",
+      "enums": {
+        "nivel_riesgo": "bajo|medio|alto|critico",
+        "tipo_entrada": "sms|url",
+        "estado_fuente": "ok|timeout|rate_limit|error",
+        "estado_cuenta": "pendiente_verificacion|activa|suspendida|eliminada",
+        "proveedor_auth": "local|google",
+        "motivo_cortocircuito": "lista_negra|suplantacion_marca|null"
+      },
+      "errores": "Jerarquía sealed AppFailure en core/errors, espejo de AntFishError del backend"
+    }
+  },
+  "stack": {
+    "lenguaje": "Dart",
+    "framework": "Flutter (un solo código base para Android e iOS, RNF-04)",
+    "estado": "flutter_riverpod (AsyncNotifier) [propuesta; alternativa válida: flutter_bloc]",
+    "navegacion": "go_router con redirect según estado de sesión",
+    "red": "dio con interceptores (auth, refresh single-flight, mapeo de errores)",
+    "almacenamiento_seguro": "flutter_secure_storage (solo tokens)",
+    "google_sign_in": "google_sign_in (SDK oficial, RF-06.4)",
+    "entrada_compartida": "receive_sharing_intent (RF-01.2)",
+    "modelos": "freezed + json_serializable",
+    "pruebas": "flutter_test, mocktail, golden tests para el semáforo",
+    "calidad": "flutter analyze, dart format, custom_lint para reglas de dependencia",
+    "dependencias_no_aprobadas_aun": "Todas las anteriores son propuestas; el proyecto exige preguntar antes de agregar dependencias."
+  },
+  "patron_arquitectonico": "Modular por feature (feature-first) con capas ligeras dentro de cada módulo (data / domain / presentation) y un núcleo transversal core/. Sin motor de dominio en el cliente: el scoring vive en el backend.",
+  "ideas_evaluadas_tot": [
+    {
+      "rama": "A",
+      "nombre": "Capas globales (espejo del backend)",
+      "evaluacion": "Descartada: mezcla todos los flujos en cada capa; el dominio del cliente es delgado."
+    },
+    {
+      "rama": "B",
+      "nombre": "Feature-first con capas ligeras",
+      "evaluacion": "Elegida: flujos con ciclos de estado distintos, cambios y pruebas aislados por módulo."
+    },
+    {
+      "rama": "C",
+      "nombre": "Por tipo de archivo (screens/widgets/services)",
+      "evaluacion": "Descartada: crece mal; auth ya tiene 9 endpoints y 6 flujos."
+    },
+    {
+      "rama": "D",
+      "nombre": "Monorepo con paquetes (melos)",
+      "evaluacion": "Descartada: sobreingeniería para ~5 usuarios/día y equipo pequeño."
+    }
+  ],
+  "justificacion_frente_al_backend": "El backend eligió capas porque todo giraba alrededor del motor de análisis (§9.1). En el cliente esa razón no aplica: hay flujos verticales independientes y poca lógica de dominio. Riesgo asumido: sobreingeniería, mitigado con carpetas (no paquetes) y dominio mínimo.",
+  "reglas_de_dependencia": {
+    "features": {
+      "puede_importar": ["core", "barrel público de otros features (solo modelos/widgets exportados)"],
+      "no_puede_importar": ["internos (data/, presentation/) de otros features"]
+    },
+    "core": {
+      "puede_importar": ["solo paquetes externos"],
+      "no_puede_importar": ["features"]
+    },
+    "capas_dentro_de_feature": {
+      "presentation": "usa controllers y contratos de domain; no importa data",
+      "domain": "modelos y contratos de repositorio; Dart puro",
+      "data": "api, dto y repositorio concreto; implementa contratos de domain"
+    },
+    "verificacion": "custom_lint en CI (equivalente a import-linter del backend)"
+  },
+  "estructura_de_carpetas": {
+    "lib/main.dart": "ProviderScope y arranque",
+    "lib/app.dart": "MaterialApp.router, tema y localización",
+    "lib/core/network/": "Cliente Dio, AuthInterceptor, RefreshInterceptor, ErrorMapper",
+    "lib/core/session/": "SessionController con estados unknown | unauthenticated | pendingVerification(email) | authenticated",
+    "lib/core/storage/": "Acceso a secure storage (refresh token)",
+    "lib/core/errors/": "AppFailure (sealed) mapeado desde HTTP y código de error",
+    "lib/core/router/": "Rutas y redirect por estado de sesión",
+    "lib/core/ui/": "Tema, semáforo de riesgo, widgets base",
+    "lib/features/auth/": "register, verify-email, resend-code, login, google, forgot, reset",
+    "lib/features/analysis/": "entrada manual y Compartir, resultado, historial por cursor, detalle, borrar análisis",
+    "lib/features/metrics/": "panel de estadísticas",
+    "lib/features/account/": "borrado de cuenta con reautenticación según proveedor",
+    "lib/l10n/": "Textos en español",
+    "test/": "unit (mappers, controllers), widget y golden por feature",
+    "integration_test/": "Flujos extremo a extremo contra API simulada"
+  },
+  "features": [
+    {
+      "nombre": "auth",
+      "casos_de_uso": ["CU-01", "CU-02", "CU-13", "CU-14", "CU-15", "CU-16", "CU-17"],
+      "endpoints": [
+        "POST /api/v1/auth/register",
+        "POST /api/v1/auth/verify-email",
+        "POST /api/v1/auth/resend-code",
+        "POST /api/v1/auth/login",
+        "POST /api/v1/auth/google",
+        "POST /api/v1/auth/refresh",
+        "POST /api/v1/auth/password/forgot",
+        "POST /api/v1/auth/password/reset"
+      ],
+      "notas_ui": [
+        "El correo se conserva en memoria durante verificación y reset porque los endpoints piden {email, codigo}.",
+        "403 ACCOUNT_NOT_VERIFIED en login lleva a la pantalla de código.",
+        "forgot siempre responde 200 uniforme: el mensaje de UI no revela si el correo existe.",
+        "Código de 6 dígitos, vigencia 10 min, máx. 5 intentos, máx. 3 reenvíos/hora (cuenta regresiva ante 429)."
+      ]
+    },
+    {
+      "nombre": "analysis",
+      "casos_de_uso": ["CU-03", "CU-04", "CU-05", "CU-06", "CU-07", "CU-08"],
+      "endpoints": [
+        "POST /api/v1/analysis",
+        "GET /api/v1/analysis?cursor=",
+        "GET /api/v1/analysis/{id}",
+        "DELETE /api/v1/analysis/{id}"
+      ],
+      "notas_ui": [
+        "Semáforo: bajo 0-19 verde, medio 20-49 amarillo, alto 50-79 naranja, critico 80-100 rojo.",
+        "Mostrar puntos_por_capa y score_total; nunca la suma de hallazgos (los hallazgos guardan puntos originales sin tope).",
+        "Hallazgos y fuentes_consultadas describen solo la URL dominante; la secundaria muestra flags_sintacticos.",
+        "analisis_parcial = true: aviso de que alguna fuente no respondió.",
+        "Historial con cursor opaco, 20 por página, scroll infinito.",
+        "POST /analysis nunca se reintenta automáticamente; botón deshabilitado mientras hay petición en curso.",
+        "El texto del SMS no se persiste ni se muestra después; el historial solo tiene mensaje_hash."
+      ]
+    },
+    {
+      "nombre": "metrics",
+      "casos_de_uso": ["CU-09"],
+      "endpoints": ["GET /api/v1/metrics/me"],
+      "notas_ui": [
+        "Borrar un análisis no decrementa contadores acumulados: incluir texto aclaratorio para que no parezca un error.",
+        "amenazas_bloqueadas cuenta análisis con score >= 50."
+      ]
+    },
+    {
+      "nombre": "account",
+      "casos_de_uso": ["CU-10"],
+      "endpoints": ["DELETE /api/v1/auth/me"],
+      "notas_ui": [
+        "Reautenticación según proveedor: password si local, id_token si google o vinculada.",
+        "Requiere conocer proveedor_auth en el cliente (ver cove_verificacion #1)."
+      ]
+    }
+  ],
+  "flujo_sesion": {
+    "arranque_en_frio": "Leer refresh token de secure storage, llamar POST /auth/refresh, pasar a authenticated o unauthenticated. Mientras tanto estado unknown con splash.",
+    "access_token": "30 min, solo en memoria, cabecera Authorization: Bearer",
+    "refresh_token": "30 días, stateless, en secure storage; refresh emite solo nuevo access token",
+    "refresh_single_flight": "Ante varios 401 simultáneos se ejecuta un único refresh y se reintentan las peticiones una vez; si el refresh falla con 401, se cierra sesión.",
+    "revocacion": "Un 401 tras cambio de contraseña (iat < password_changed_at) fuerza logout local.",
+    "logout": "Local (borrar tokens); el backend no expone endpoint de logout."
+  },
+  "red_y_resiliencia": {
+    "timeouts_sugeridos": {
+      "conexion_s": 5,
+      "respuesta_s": 10,
+      "justificacion": "p95 objetivo 2.5 s (RNF-01); cada API externa tiene timeout de 1.5 s en backend"
+    },
+    "reintentos": "Solo peticiones idempotentes (GET); nunca POST /analysis ni POST de códigos.",
+    "limites_conocidos": {
+      "analysis": "20 por minuto por usuario (429)",
+      "login_y_google": "5 por minuto por IP (429)",
+      "reenvio_y_forgot": "3 por hora por usuario (429)"
+    }
+  },
+  "mapeo_errores_a_ux": [
+    { "http": 401, "codigo": "credenciales inválidas (login)", "ux": "Mensaje genérico, sin revelar si el correo existe" },
+    { "http": 401, "codigo": "token inválido o revocado", "ux": "Intentar refresh; si falla, cerrar sesión" },
+    { "http": 403, "codigo": "ACCOUNT_NOT_VERIFIED", "ux": "Ir a pantalla de verificación con el correo en memoria" },
+    { "http": 409, "codigo": "correo ya registrado y activo / correo de Google no verificado", "ux": "Mensaje específico y sugerir login" },
+    { "http": 429, "codigo": "límite de tasa", "ux": "Cuenta regresiva y botón deshabilitado" },
+    { "http": 503, "codigo": "EmailDeliveryError o Redis fail-closed", "ux": "Mensaje claro y reintento manual (reenviar código)" }
+  ],
+  "privacidad_en_cliente": [
+    "No persistir el texto del SMS ni borradores de entrada.",
+    "No registrar bodies, tokens, códigos ni contraseñas en logs ni en reportes de fallos.",
+    "Solo los tokens van a secure storage; nada sensible en SharedPreferences.",
+    "No almacenar el ID token de Google; se envía al backend y se descarta."
+  ],
+  "entrada_de_datos": {
+    "manual": "Pegar texto o URL (RF-01.1)",
+    "compartir": "Menú nativo Compartir en Android; en iOS el flujo habitual probablemente sea copiar y pegar (confirmar en dispositivo real)",
+    "decision_tipo_entrada": "Propuesta: si el contenido es una única URL, tipo_entrada = url; en otro caso, sms. El backend valida (DP-09 abierto)."
+  },
+  "pruebas": {
+    "unit": "Mappers DTO a modelo, controllers, mapeo de errores, heurística de tipo_entrada",
+    "widget": "Pantallas por feature con repositorios falsos",
+    "golden": "Semáforo de riesgo en los 4 niveles y estado analisis_parcial",
+    "integracion": "Registro, verificación, login, análisis, historial y borrado contra API simulada",
+    "interceptor_refresh": "Prueba específica de concurrencia: varios 401 simultáneos generan un solo refresh"
+  },
+  "cove_verificacion": [
+    {
+      "id": 1,
+      "pregunta": "¿Cada pantalla tiene un endpoint que la alimente?",
+      "hallazgo": "No existe GET /auth/me. El borrado exige password o id_token según proveedor, pero el cliente no conoce proveedor_auth ni nombre.",
+      "accion": "Incluir proveedor_auth y nombre en la respuesta de login/google o crear endpoint de perfil.",
+      "estado": "abierto"
+    },
+    {
+      "id": 2,
+      "pregunta": "¿El score mostrado cuadra con los hallazgos?",
+      "hallazgo": "En el ejemplo los hallazgos suman 95 pts brutos y score_total es 90 por los topes por capa.",
+      "accion": "Mostrar puntos_por_capa y score_total, nunca la suma de hallazgos.",
+      "estado": "resuelto en diseño"
+    },
+    {
+      "id": 3,
+      "pregunta": "¿Los hallazgos describen todas las URLs?",
+      "hallazgo": "Solo la dominante; la secundaria trae únicamente flags_sintacticos.",
+      "accion": "Rotular 'URL principal' y mostrar la secundaria con sus alertas sintácticas.",
+      "estado": "resuelto en diseño"
+    },
+    {
+      "id": 4,
+      "pregunta": "¿Hay catálogo estable de errores?",
+      "hallazgo": "DP-07 pendiente; solo ACCOUNT_NOT_VERIFIED aparece explícito.",
+      "accion": "Acordar campo code por error antes de definir AppFailure.",
+      "estado": "abierto"
+    },
+    {
+      "id": 5,
+      "pregunta": "¿Hay DTOs de respuesta definidos?",
+      "hallazgo": "DP-08 pendiente; la forma se infiere del ejemplo del modelo NoSQL.",
+      "accion": "Obtener el OpenAPI de FastAPI y validar los DTOs contra él.",
+      "estado": "abierto"
+    },
+    {
+      "id": 6,
+      "pregunta": "¿Quién decide tipo_entrada?",
+      "hallazgo": "El cliente; DP-09 (correos y límite de 2,048) sigue abierto.",
+      "accion": "Usar la heurística propuesta y confirmar con backend.",
+      "estado": "abierto"
+    },
+    {
+      "id": 7,
+      "pregunta": "¿Las métricas cuadran con el historial?",
+      "hallazgo": "Pueden no cuadrar por diseño: borrar un análisis no decrementa metricas_usuario.",
+      "accion": "Texto aclaratorio en el panel.",
+      "estado": "resuelto en diseño"
+    },
+    {
+      "id": 8,
+      "pregunta": "¿Se contradice la decisión de capas del backend?",
+      "hallazgo": "No: las razones del backend no aplican igual al cliente. Riesgo: sobreingeniería.",
+      "accion": "Carpetas en lugar de paquetes y dominio mínimo.",
+      "estado": "resuelto en diseño"
+    },
+    {
+      "id": 9,
+      "pregunta": "¿Los documentos fuente están sincronizados?",
+      "hallazgo": "Modelo NoSQL en v2.2 y contexto en v2.1. El modelo trae 23 reglas_de_negocio y el doc de casos de uso menciona RN-01 a RN-26; la numeración no se verificó.",
+      "accion": "Revisar antes de congelar el contrato.",
+      "estado": "abierto"
+    }
+  ],
+  "decisiones_pendientes": [
+    { "id": "DPF-01", "tema": "Gestor de estado", "detalle": "Confirmar Riverpod frente a Bloc según experiencia del equipo." },
+    { "id": "DPF-02", "tema": "Aprobación de dependencias", "detalle": "Aprobar la lista de paquetes de stack antes de agregarlos." },
+    { "id": "DPF-03", "tema": "Perfil de usuario", "detalle": "Definir cómo obtiene el cliente proveedor_auth y nombre (ver CoVE #1)." },
+    { "id": "DPF-04", "tema": "Catálogo de errores y OpenAPI", "detalle": "Cerrar con backend DP-07 y DP-08 (ver CoVE #4 y #5)." },
+    { "id": "DPF-05", "tema": "Compartir en iOS", "detalle": "Validar en dispositivo real si habrá Share Extension o solo copiar y pegar." }
+  ],
+  "historial_cambios": [
+    {
+      "version": "1.0-propuesta",
+      "fecha": "2026-11-02",
+      "resumen": "Primera propuesta de arquitectura frontend: ToT, decisión feature-first con capas ligeras, reglas de dependencia, flujo de sesión, mapeo de errores y verificación CoVE contra los documentos del backend."
+    }
+  ]
+}

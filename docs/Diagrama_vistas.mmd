@@ -1,0 +1,30 @@
+flowchart TD
+    V01["V-01: LOGIN / AUTH"]
+    V02["V-02: REGISTRO LOCAL"]
+    V03["V-03: VERIFICACIÓN CORREO (OTP)"]
+    V04["V-04: RECUPERACIÓN DE CONTRASEÑA"]
+    
+    subgraph MENU["MENÚ INFERIOR (TABS)"]
+        V05["V-05: ESCÁNER / HOME<br/>• Pega SMS o URL<br/>• Recibe vía 'Compartir'<br/>• Botón 'Analizar'"]
+        V06["V-06: HISTORIAL<br/>• Paginación por cursor<br/>• Filtro por tipo<br/>• Eliminar registro"]
+        V07["V-07: PANEL DE MÉTRICAS<br/>• Escaneos Totales<br/>• Desglose SMS vs URL<br/>• Amenazas Bloqueadas"]
+    end
+
+    V08["V-08: DETALLE DE DIAGNÓSTICO<br/>• Semáforo Visual (🟢🟡🟠🔴)<br/>• Puntaje (0 - 100)<br/>• Hallazgos y Puntos por Capa<br/>• Recomendaciones"]
+    V09["V-09: PERFIL Y CONFIGURACIÓN<br/>• Datos de Usuario<br/>• Proveedor Auth (Local/Google)<br/>• Vinculación de Cuenta<br/>• Eliminar Cuenta"]
+
+    %% Conexiones
+    V01 -->|"Clic 'Registrarse'"| V02
+    V01 -->|"Clic 'Olvidé Contraseña'"| V04
+    V01 -->|"Auth Exitosa (JWT)"| V05
+    
+    V02 -->|"Registro Exitoso"| V03
+    V03 -->|"Código Validado"| V01
+    V04 -->|"Reset Exitoso"| V01
+
+    V05 -->|"Post Análisis"| V08
+    V06 -->|"Selección de Item"| V08
+
+    V05 .-> V09
+    V06 .-> V09
+    V07 .-> V09
