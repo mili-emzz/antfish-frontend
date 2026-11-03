@@ -113,21 +113,99 @@ abstract final class AppStrings {
   // Encabezados de secciones del shell (App.tsx)
   static const String homeEyebrow = 'ESCÁNER INTELIGENTE';
   static const String homeTitle = 'Tu espacio está protegido.';
+  static const String homeTitleLead = 'Tu espacio está ';
+  static const String homeTitleAccent = 'protegido.';
+  static const String homeGreeting = 'Buenas tardes, Alex';
+  static const String homeAvatarInitials = 'AM';
+  static const String homeAvatarSemantics = 'Abrir perfil';
+  static const String homeSecurityRingLabel = 'Protección activa';
+  static const String homeScannerEngineStatus = 'Motor activo';
+  static const String homeScannerHeading = '¿Qué quieres analizar?';
   static const String homeCopy =
       'Pega un enlace o mensaje sospechoso. Nosotros hacemos el resto.';
+  static const String homeTypeUrl = 'Enlace URL';
+  static const String homeTypeSms = 'Mensaje SMS';
+  static const String homeInputUrlHint =
+      'https://sitio-que-quieres-verificar.com';
+  static const String homeInputSmsHint =
+      'Pega aquí el contenido del mensaje sospechoso...';
+  static const String homeInputClearSemantics = 'Limpiar';
+  static const String homePrivacyNote =
+      'Tu contenido se analiza de forma privada y nunca se almacena.';
+  static const String homeScanSubmit = 'Analizar ahora';
+  static const String homeScanSubmitting = 'Analizando señales...';
 
+  // Semáforo informativo y tarjeta de resultado (App.tsx)
+  static const String trafficLightEyebrow = 'SEMÁFORO DE RIESGO';
+  static const String trafficLightTitle = 'Una respuesta clara, no solo datos.';
+  static const String trafficLightCopy =
+      'Traducimos cientos de señales en un nivel de riesgo fácil de entender.';
+  static const String resultEyebrow = 'ANÁLISIS COMPLETADO';
+  static const String resultCriticalLabel = 'RIESGO CRÍTICO';
+  static const String resultCriticalTitle = 'No abras este enlace';
+  static const String resultCriticalCopy =
+      'Detectamos una posible suplantación de identidad y reputación negativa.';
+  static const String resultFindingDeceptiveDomain = 'Dominio engañoso';
+  static const String resultFindingBlacklist = 'Lista negra';
+
+  // Actividad reciente e historial (App.tsx)
+  static const String recentEyebrow = 'ACTIVIDAD';
+  static const String recentTitle = 'Análisis recientes';
+  static const String recentViewAll = 'Ver todos';
   static const String historyEyebrow = 'REGISTRO SEGURO';
   static const String historyTitle = 'Tu historial';
   static const String historyCopy =
       'Consulta tus análisis anteriores y vuelve a revisar los resultados.';
+  static const String historyFilterAll = 'Todos';
+  static const String historyFilterUrls = 'Enlaces';
+  static const String historyFilterSms = 'Mensajes';
 
+  // Métricas (StatsScreen en App.tsx)
   static const String statsEyebrow = 'TU IMPACTO';
   static const String statsTitle = 'Métricas de protección';
   static const String statsCopy =
       'Cada análisis suma una capa más de tranquilidad digital.';
+  static const String statsRingLabel = 'nivel seguro';
+  static const String statsHeroEyebrow = 'ESTE MES';
+  static const String statsHeroTitleLead = 'Tu protección creció ';
+  static const String statsHeroTitleAccent = '12%';
+  static const String statsHeroCopy =
+      'Has evitado interactuar con 7 amenazas potenciales.';
+  static const String statsMetricTotalScans = 'Escaneos totales';
+  static const String statsMetricTotalScansSub = '+18 este mes';
+  static const String statsMetricBlocked = 'Amenazas bloqueadas';
+  static const String statsMetricBlockedSub = '15.5% del total';
+  static const String statsMetricUrls = 'Enlaces analizados';
+  static const String statsMetricUrlsSub = '61% de actividad';
+  static const String statsMetricSms = 'SMS analizados';
+  static const String statsMetricSmsSub = '39% de actividad';
+  static const String statsBreakdownEyebrow = 'DESGLOSE';
+  static const String statsBreakdownTitle = 'Nivel de riesgo';
+  static const String statsBreakdownPeriod = 'Últimos 30 días';
+  static const String statsRiskSafe = 'Seguro';
+  static const String statsRiskMedium = 'Riesgo medio';
+  static const String statsRiskHigh = 'Riesgo alto';
+  static const String statsRiskCritical = 'Crítico';
+  static const String statsInsightTitle = 'Tu hábito más seguro';
+  static const String statsInsightCopy =
+      'Analizas el 84% de los enlaces antes de abrirlos.';
+  static const String statsPersistenceNote =
+      'Eliminar un análisis del historial no reduce los contadores históricos.';
 
+  // Perfil (ProfileScreen en App.tsx)
   static const String profileEyebrow = 'CUENTA PROTEGIDA';
   static const String profileTitle = 'Tu perfil';
   static const String profileCopy =
       'Administra tu espacio, privacidad y preferencias.';
+  static const String profileDemoName = 'Alex Morgan';
+  static const String profileDemoEmail = 'alex@correo.com';
+  static const String profileVerifiedBadge = 'Correo verificado';
+  static const String profileSecurityTitle = 'Centro de seguridad';
+  static const String profileSecuritySubtitle = 'Contraseña y sesiones activas';
+  static const String profilePrivacyTitle = 'Privacidad';
+  static const String profilePrivacySubtitle = 'Datos y permisos de análisis';
+  static const String profilePreferencesTitle = 'Preferencias';
+  static const String profilePreferencesSubtitle = 'Alertas y notificaciones';
+  static const String profileLogout = 'Cerrar sesión';
+  static const String profileVersion = 'AntFish 1.0 · Tu escudo digital';
 }

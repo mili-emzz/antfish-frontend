@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'core/router/app_routes.dart';
 import 'core/ui/layout/app_shell.dart';
 import 'core/ui/theme/app_theme.dart';
-import 'core/ui/widgets/app_alert.dart';
 import 'core/ui/widgets/crystal_bottom_nav.dart';
-import 'core/ui/widgets/page_header.dart';
+import 'features/account/account.dart';
+import 'features/analysis/analysis.dart';
 import 'features/auth/auth.dart';
-import 'l10n/app_strings.dart';
+import 'features/metrics/metrics.dart';
 
 /// Punto de entrada del widget raíz de AntFish.
 ///
@@ -68,9 +68,6 @@ class AntFishApp extends StatelessWidget {
 
 /// Anfitrión del shell principal que conmuta entre las 4 pestañas de App.tsx
 /// (`home`, `history`, `stats`, `profile`).
-///
-/// Las vistas internas se irán sustituyendo en las Fases 2 a 5 por
-/// `HomeScreen`, `HistoryScreen`, `StatsScreen` y `ProfileScreen`.
 class _AppShellHost extends StatefulWidget {
   const _AppShellHost({required this.initialTab});
 
@@ -98,43 +95,21 @@ class _AppShellHostState extends State<_AppShellHost> {
 
   @override
   Widget build(BuildContext context) {
-    final (eyebrow, title, copy) = switch (_currentTab) {
-      AppTab.home => (
-        AppStrings.homeEyebrow,
-        AppStrings.homeTitle,
-        AppStrings.homeCopy,
+    final Widget tabBody = switch (_currentTab) {
+      AppTab.home => HomeScreen(
+        onOpenProfile: () => _selectTab(AppTab.profile),
+        onViewAllHistory: () => _selectTab(AppTab.history),
       ),
-      AppTab.history => (
-        AppStrings.historyEyebrow,
-        AppStrings.historyTitle,
-        AppStrings.historyCopy,
-      ),
-      AppTab.stats => (
-        AppStrings.statsEyebrow,
-        AppStrings.statsTitle,
-        AppStrings.statsCopy,
-      ),
-      AppTab.profile => (
-        AppStrings.profileEyebrow,
-        AppStrings.profileTitle,
-        AppStrings.profileCopy,
-      ),
+      AppTab.history => const HistoryScreen(),
+      AppTab.stats => const StatsScreen(),
+      AppTab.profile => const ProfileScreen(),
     };
 
     return AppShell(
       currentTab: _currentTab,
       onTabSelected: _selectTab,
       onScanPressed: () => _selectTab(AppTab.home),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          PageHeader(eyebrow: eyebrow, title: title, copy: copy),
-          const AppAlert(
-            message: AppStrings.templateComingSoon,
-            variant: AlertVariant.info,
-          ),
-        ],
-      ),
+      child: tabBody,
     );
   }
 }

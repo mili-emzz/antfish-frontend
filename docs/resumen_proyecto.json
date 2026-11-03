@@ -255,14 +255,15 @@
     "decisiones_tecnicas_tomadas": [
       "DT-10: Regla mandatoria del sistema (.agents/rules/sync_resumen_proyecto.md) y DoD en AGENTS.md para sincronizar docs/resumen_proyecto.json al finalizar cada tarea o cambio.",
       "DT-11: Implementación de plantilla UI pura de autenticación (Login y Registro) en Flutter Feature-First bajo estética Dark Crystal Cyber-Shield, responsive adaptativo (>800px dos columnas con visual hero narrativo; <=800px una columna; <=520px compacto), validadores puros y alertas sin dependencias externas bloqueantes.",
-      "DT-12: Migración Fase 1 del prototipo 'App de Escaneo Cyber-Shield' (App.tsx): creación de AppShell, CrystalBottomNav (con botón central elevado de escaneo) y PageHeader en core/ui/, y registro de las rutas /home, /history, /stats y /profile en AppRoutes y app.dart."
+      "DT-12: Migración Fase 1 del prototipo 'App de Escaneo Cyber-Shield' (App.tsx): creación de AppShell, CrystalBottomNav (con botón central elevado de escaneo) y PageHeader en core/ui/, y registro de las rutas /home, /history, /stats y /profile en AppRoutes y app.dart.",
+      "DT-13: Migración de pantallas del shell (HomeScreen, HistoryScreen, StatsScreen y ProfileScreen) como plantillas UI sin backend: SecurityRing transversal en core/ui/, botones que requieren API (POST /api/v1/analysis, detalle de historial y submenús de ajustes) deshabilitados (onPressed/onTap: null), cero persistencia local de texto de SMS y controles locales (selector URL/SMS, limpiar campo, filtros de historial, navegación entre pestañas y logout local) activos.",
+      "DT-14: Refactorización y verificación integral: corrección de overflow por escalado de texto en la cabecera de ThreatBreakdown (Wrap responsivo), adición de soporte initialShowResult y onDismiss en HomeScreen/ResultCard para alternar con RiskTrafficLightCard, y suite completa de 51 pruebas de widgets en verde."
     ],
-    "ultimo_resumen": "Fase 1 de migración a Flutter completada: implementados AppShell (lib/core/ui/layout/app_shell.dart), CrystalBottomNav con botón central elevado de escaneo (lib/core/ui/widgets/crystal_bottom_nav.dart) y PageHeader (lib/core/ui/widgets/page_header.dart). Añadidas las rutas /home, /history, /stats y /profile en AppRoutes y conectadas en AntFishApp.",
+    "ultimo_resumen": "Revisión y refactorización completadas: validada toda la migración del prototipo 'App de Escaneo Cyber-Shield' a Flutter Feature-First. Se crearon pruebas unitarias y de widgets para HomeScreen, HistoryScreen, StatsScreen y ProfileScreen. Se corrigió un desbordamiento en StatsScreen ante texto al 200 % y se integró onDismiss en ResultCard. 'flutter analyze' limpio, 'dart format' verificado y 51/51 pruebas pasando en 'flutter test'.",
     "proximos_pasos_inmediatos": [
-      "1. Fase 2: Implementar HomeScreen (pantalla principal de escaneo con saludo, SecurityRing, ScannerCard URL/SMS, RiskTrafficLight, ResultCard y actividad reciente).",
-      "2. Fase 3: Implementar HistoryScreen (filtros Todos/Enlaces/Mensajes y listado de análisis).",
-      "3. Fase 4: Implementar StatsScreen (panel de métricas de protección, grid 2x2, desglose de nivel de riesgo e insight).",
-      "4. Fase 5: Implementar ProfileScreen (tarjeta de perfil verificado, lista de ajustes y botón de cierre de sesión)."
+      "1. Ratificar formalmente el gestor de estado (Riverpod vs Bloc - DPF-01) y aprobar dependencias en pubspec.yaml (DPF-02).",
+      "2. Instalar dio y flutter_secure_storage para implementar interceptores de red y refresco de tokens (core/network y core/storage).",
+      "3. Conectar endpoints reales del backend cuando estén disponibles (POST /api/v1/analysis, GET /api/v1/analysis, GET /api/v1/metrics)."
     ]
   }
 }
