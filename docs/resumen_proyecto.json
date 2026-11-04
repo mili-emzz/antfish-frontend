@@ -1,0 +1,271 @@
+{
+  "_comentario_ia": "Documento central de contexto, decisiones y estado del frontend de AntFish. Diseñado para ser consumido tanto por agentes de IA como por desarrolladores humanos.",
+  "metadata": {
+    "nombre_proyecto": "AntFish Frontend",
+    "version": "1.0.0",
+    "fecha_creacion": "2026-11-02",
+    "ultima_actualizacion": "2026-11-03",
+    "estado_proyecto": "Fase de UI Plantilla y Arquitectura Base",
+    "repositorio": "antfish_frontend",
+    "fuentes_de_verdad": [
+      "docs/CONTEXTO/CONTEXTO_AntFish_V2.md (Contrato y requerimientos backend inmutables)",
+      "docs/MODELADO-AGENTS/antfish_modelo_nosql.json (Esquema NoSQL y tipos)",
+      "docs/arquitectura_frontend_v1.json (Arquitectura Flutter detallada)",
+      "DESIGN.md (Sistema de diseño Dark Crystal Cyber-Shield)",
+      "AGENTS.md (Reglas operativas para agentes de IA)",
+      "docs/CONTEXTO/Antfish_Casos_de_Uso.md (Casos de uso CU-01 a CU-17)"
+    ]
+  },
+  "resumen_ejecutivo": {
+    "descripcion": "Aplicación móvil (Android e iOS) para análisis y detección de URLs y mensajes SMS maliciosos (smishing/phishing). Consume la API REST del backend AntFish.",
+    "relacion_con_backend": "El frontend es un cliente ligero. No implementa motor de scoring ni reglas heurísticas de detección: toda la lógica de evaluación, reputación y puntuación reside exclusivamente en el backend.",
+    "principios_fundamentales": [
+      "El contrato del backend es inmutable y tiene máxima precedencia.",
+      "Nunca recalcular el score en el cliente móvil.",
+      "Privacidad estricta: nunca persistir el texto del SMS analizado ni datos sensibles en almacenamiento no seguro.",
+      "Sistema visual inmersivo 'Dark Crystal Cyber-Shield' con semáforo accesible multivariable (color, icono, etiqueta y puntaje)."
+    ]
+  },
+  "stack_tecnologico": {
+    "framework": "Flutter 3.x (Canal Stable)",
+    "lenguaje": "Dart 3.x",
+    "version_instalada_en_entorno": {
+      "flutter": "3.47.9",
+      "dart": "3.13.7",
+      "ruta_sdk_local": "C:\\src\\flutter\\bin"
+    },
+    "paquetes_nucleo_propuestos": {
+      "estado": "flutter_riverpod (AsyncNotifier) [Alternativa evaluada: flutter_bloc]",
+      "navegacion": "go_router (con redirecciones reactivas basadas en sesión)",
+      "cliente_http": "dio (con interceptores Bearer, refresh concurrente y mapeo de fallos)",
+      "almacenamiento_seguro": "flutter_secure_storage (únicamente para tokens JWT)",
+      "modelos_e_inmutabilidad": "freezed + json_serializable",
+      "autenticacion_terceros": "google_sign_in (SDK oficial)",
+      "integracion_sistema": "receive_sharing_intent (menú nativo Compartir)",
+      "testing": "flutter_test, mocktail, golden tests para semáforo",
+      "analisis_estatico": "flutter analyze, dart format, custom_lint"
+    },
+    "regla_de_dependencias": "No agregar librerías a pubspec.yaml sin aprobación explícita del equipo."
+  },
+  "arquitectura": {
+    "patron_principal": "Modular por Feature (Feature-First) con capas ligeras (presentation, domain, data) y un núcleo transversal core/",
+    "justificacion": "Módulos verticales independientes con ciclos de vida y estados desacoplados; dominio ligero en el cliente debido a que el scoring vive en backend.",
+    "estructura_carpetas": {
+      "lib/": {
+        "main.dart": "Punto de entrada y configuración de ProviderScope",
+        "app.dart": "MaterialApp.router, temas y configuración l10n",
+        "core/": {
+          "network/": "Instancia de Dio, AuthInterceptor, RefreshInterceptor, ErrorMapper",
+          "session/": "SessionController (unknown, unauthenticated, pendingVerification, authenticated)",
+          "storage/": "Wrapper sobre FlutterSecureStorage",
+          "errors/": "Jerarquía sealed AppFailure",
+          "router/": "Configuración de GoRouter con guardias de autenticación",
+          "ui/": "Tokens de tema Dark Crystal, semáforo de riesgo y widgets base"
+        },
+        "features/": {
+          "auth/": "Registro, verificación por código, reenvío, login, Google, forgot, reset",
+          "analysis/": "Entrada manual/compartir, resultado, semáforo, historial con cursor, detalle, borrado",
+          "metrics/": "Panel de estadísticas (anillo de seguridad, contadores)",
+          "account/": "Configuración y borrado de cuenta con reautenticación"
+        },
+        "l10n/": "Textos internacionalizados en español (ARB / AppLocalizations)"
+      }
+    },
+    "reglas_de_importacion": [
+      "Un feature solo puede importar core/ y el barrel público de otros features.",
+      "Un feature NUNCA puede importar carpetas internas (data/, presentation/) de otro feature.",
+      "core/ NUNCA puede importar código de features/.",
+      "presentation/ nunca importa data/ directamente; se comunica mediante contratos de domain/.",
+      "domain/ es Dart puro (sin dependencias de frameworks o plugins externos)."
+    ]
+  },
+  "sistema_diseno": {
+    "nombre": "Dark Crystal Cyber-Shield",
+    "documento_referencia": "DESIGN.md",
+    "estetica": "Fondos oscuros profundos, superficies de cristal translúcidas (glassmorphism con blur de 24px), acentos dorados para acciones principales/protección y resplandores lilas/púrpuras.",
+    "paleta_colores": {
+      "fondo_profundo": "#110816",
+      "fondo_berenjena": "#180A20",
+      "fondo_violeta": "#240E2D",
+      "plum_principal": "#462255",
+      "lilac_resplandor": "#B47EB3",
+      "gold_proteccion": "#D7BA89",
+      "muted_texto": "#AA9EAE"
+    },
+    "semaforo_riesgo": {
+      "bajo": { "color": "#6AD6A2", "rango": "0-19", "etiqueta": "Seguro" },
+      "medio": { "color": "#E0CC72", "rango": "20-49", "etiqueta": "Precaución" },
+      "alto": { "color": "#DD905D", "rango": "50-79", "etiqueta": "Riesgo Alto" },
+      "critico": { "color": "#D96179", "rango": "80-100", "etiqueta": "Crítico" }
+    },
+    "tipografia": {
+      "titulos_y_metricas": "Manrope",
+      "cuerpo_y_formularios": "DM Sans"
+    },
+    "regla_accesibilidad": "Nunca comunicar riesgo solo mediante color; acompañar con icono, nombre del nivel y puntaje."
+  },
+  "decisiones_tecnicas_tomadas": [
+    {
+      "id": "DT-01",
+      "tema": "Framework móvil multiplataforma",
+      "decision": "Utilizar Flutter con Dart 3.x para compilar nativamente en Android e iOS desde una sola base de código.",
+      "razon": "Cumple con el requerimiento RNF-04 y maximiza consistencia visual del sistema de diseño."
+    },
+    {
+      "id": "DT-02",
+      "tema": "Ubicación del SDK de Flutter en el entorno",
+      "decision": "Mover el SDK de Flutter de OneDrive a C:\\src\\flutter y registrar permanentemente su carpeta bin en la variable PATH del usuario.",
+      "razon": "Evita bloqueos de sincronización y lentitud por OneDrive y permite invocar flutter globalmente en Windows."
+    },
+    {
+      "id": "DT-03",
+      "tema": "Patrón de arquitectura cliente",
+      "decision": "Adoptar Feature-First con capas ligeras (Rama B) en lugar de capas globales o monorepo.",
+      "razon": "El cliente tiene lógica de dominio delgada (el scoring vive en el backend) y flujos verticales independientes con distintos ciclos de vida."
+    },
+    {
+      "id": "DT-04",
+      "tema": "Gestión de sesión y tokens JWT",
+      "decision": "access_token (30 min) solo vive en memoria RAM; refresh_token (30 días) se persiste exclusivamente en flutter_secure_storage.",
+      "razon": "Seguridad estricta. El backend no tiene revocación de refresh tokens por lo que el logout es local eliminando las claves almacenadas."
+    },
+    {
+      "id": "DT-05",
+      "tema": "Concurrencia en refresco de tokens (Single-Flight)",
+      "decision": "El interceptor de Dio encola peticiones concurrentes y dispara una única llamada a POST /auth/refresh ante errores 401.",
+      "razon": "Evita condiciones de carrera y múltiples peticiones de refresco simultáneas."
+    },
+    {
+      "id": "DT-06",
+      "tema": "Privacidad de SMS y datos analizados",
+      "decision": "Queda estrictamente prohibido persistir o registrar en caché, base de datos local o logs el texto de los SMS analizados.",
+      "razon": "Cumplimiento de privacidad del usuario; el historial únicamente expone mensaje_hash generado por el backend."
+    },
+    {
+      "id": "DT-07",
+      "tema": "Visualización del score en la UI",
+      "decision": "Mostrar siempre score_total y puntos_por_capa; prohibido sumar los puntos brutos de hallazgos en la pantalla.",
+      "razon": "Los hallazgos individuales conservan sus puntos brutos sin topar, mientras que el score total aplica topes por capa y cortocircuitos."
+    },
+    {
+      "id": "DT-08",
+      "tema": "Manejo de múltiples URLs en el análisis",
+      "decision": "Los hallazgos y fuentes consultadas detalladas pertenecen a la URL dominante; la secundaria solo muestra flags_sintacticos claramente rotulada.",
+      "razon": "El backend analiza máximo 2 URLs y solo ejecuta reputación sobre la principal."
+    },
+    {
+      "id": "DT-09",
+      "tema": "Internacionalización y convenciones de código",
+      "decision": "Código Dart e identificadores en inglés; textos visibles al usuario estrictamente en español centralizados en l10n/ (sin textos hardcodeados).",
+      "razon": "Mantenibilidad profesional y consistencia con las reglas de negocio."
+    }
+  ],
+  "decisiones_pendientes_a_ratificar": [
+    {
+      "id": "DPF-01",
+      "tema": "Gestor de estado definitivo",
+      "propuesta": "flutter_riverpod (AsyncNotifier)",
+      "alternativa": "flutter_bloc",
+      "estado": "Pendiente de ratificación formal del equipo"
+    },
+    {
+      "id": "DPF-02",
+      "tema": "Aprobación de dependencias en pubspec.yaml",
+      "propuesta": "Aprobar el conjunto de dependencias núcleo definidas en el stack",
+      "estado": "Pendiente de aprobación antes de crearlas en pubspec.yaml"
+    },
+    {
+      "id": "DPF-03",
+      "tema": "Contrato de perfil de usuario para borrado de cuenta",
+      "problema": "No existe endpoint GET /auth/me. El borrado de cuenta (DELETE /api/v1/auth/me) exige contraseña (local) o id_token (Google), pero el cliente no recibe proveedor_auth.",
+      "accion_requerida": "Acordar con backend si se retorna proveedor_auth en login/google o si se crea endpoint de perfil",
+      "estado": "Abierto con backend (CoVE #1)"
+    },
+    {
+      "id": "DPF-04",
+      "tema": "Catálogo unificado de códigos de error y OpenAPI",
+      "problema": "Solo ACCOUNT_NOT_VERIFIED está formalizado; falta campo 'code' unificado de FastAPI para mapear a AppFailure.",
+      "accion_requerida": "Cerrar catálogo de códigos de error y validar esquemas DTO contra OpenAPI",
+      "estado": "Abierto con backend (CoVE #4 y #5)"
+    },
+    {
+      "id": "DPF-05",
+      "tema": "Estrategia de menú Compartir en iOS",
+      "propuesta": "Android usará Intent nativo (receive_sharing_intent); en iOS evaluar Share Extension nativo vs flujo por portapapeles",
+      "estado": "Pendiente de prueba en dispositivo físico"
+    }
+  ],
+  "cove_verificacion_backend_frontend": [
+    {
+      "id": 1,
+      "pregunta": "¿Cada pantalla tiene un endpoint que la alimente?",
+      "hallazgo": "Falta perfil de usuario para conocer proveedor_auth en borrado de cuenta.",
+      "estado": "Abierto"
+    },
+    {
+      "id": 2,
+      "pregunta": "¿El score mostrado cuadra con los hallazgos?",
+      "hallazgo": "Los hallazgos son brutos y el score aplica topes.",
+      "estado": "Resuelto en diseño UI (mostrar puntos_por_capa)"
+    },
+    {
+      "id": 3,
+      "pregunta": "¿Los hallazgos describen todas las URLs?",
+      "hallazgo": "Solo la URL dominante; la secundaria solo trae flags sintácticos.",
+      "estado": "Resuelto en diseño UI (rotular principal y secundaria)"
+    },
+    {
+      "id": 4,
+      "pregunta": "¿Hay catálogo estable de códigos de error?",
+      "hallazgo": "Pendiente en backend el campo 'code' estándar.",
+      "estado": "Abierto"
+    },
+    {
+      "id": 5,
+      "pregunta": "¿Hay DTOs de respuesta formalizados?",
+      "hallazgo": "Pendiente exportar esquema OpenAPI de FastAPI.",
+      "estado": "Abierto"
+    },
+    {
+      "id": 6,
+      "pregunta": "¿Quién decide tipo_entrada (sms vs url)?",
+      "hallazgo": "Heurística en cliente: URL pura -> url; cualquier otro texto -> sms.",
+      "estado": "Propuesto (pendiente validar con backend)"
+    },
+    {
+      "id": 7,
+      "pregunta": "¿Las métricas cuadran con el historial?",
+      "hallazgo": "Borrar un análisis no reduce contadores históricos de métricas.",
+      "estado": "Resuelto en diseño UI (texto aclaratorio en panel)"
+    },
+    {
+      "id": 8,
+      "pregunta": "¿Se contradice la decisión de capas del backend?",
+      "hallazgo": "No: el backend tiene motor de scoring pesado; el cliente no.",
+      "estado": "Resuelto (Feature-First con capas ligeras)"
+    },
+    {
+      "id": 9,
+      "pregunta": "¿Los documentos fuente están sincronizados?",
+      "hallazgo": "Modelo NoSQL en v2.2 y contexto en v2.1.",
+      "estado": "Abierto para revisión antes de congelar contratos"
+    }
+  ],
+  "ultimo_resumen_y_proximos_pasos": {
+    "decisiones_tecnicas_tomadas": [
+      "DT-10: Regla mandatoria del sistema (.agents/rules/sync_resumen_proyecto.md) y DoD en AGENTS.md para sincronizar docs/resumen_proyecto.json al finalizar cada tarea o cambio.",
+      "DT-11: Implementación de plantilla UI pura de autenticación (Login y Registro) en Flutter Feature-First bajo estética Dark Crystal Cyber-Shield, responsive adaptativo (>800px dos columnas con visual hero narrativo; <=800px una columna; <=520px compacto), validadores puros y alertas sin dependencias externas bloqueantes.",
+      "DT-12: Migración Fase 1 del prototipo 'App de Escaneo Cyber-Shield' (App.tsx): creación de AppShell, CrystalBottomNav (con botón central elevado de escaneo) y PageHeader en core/ui/, y registro de las rutas /home, /history, /stats y /profile en AppRoutes y app.dart.",
+      "DT-13: Migración de pantallas del shell (HomeScreen, HistoryScreen, StatsScreen y ProfileScreen) como plantillas UI sin backend: SecurityRing transversal en core/ui/, botones que requieren API (POST /api/v1/analysis, detalle de historial y submenús de ajustes) deshabilitados (onPressed/onTap: null), cero persistencia local de texto de SMS y controles locales (selector URL/SMS, limpiar campo, filtros de historial, navegación entre pestañas y logout local) activos.",
+      "DT-14: Refactorización y verificación integral: corrección de overflow por escalado de texto en la cabecera de ThreatBreakdown (Wrap responsivo), adición de soporte initialShowResult y onDismiss en HomeScreen/ResultCard para alternar con RiskTrafficLightCard, y desactivación (onPressed: null) de los botones de Login y Registro que requieren del backend ('Entrar de forma segura', '¿Olvidaste tu contraseña?', 'Crear cuenta segura', 'Continuar con Google', 'Términos' y 'Privacidad').",
+      "DT-15: Depuración de StatsScreen para alinearse estrictamente al modelo de datos del backend (UserMetrics): eliminación del bloque hero 'Este mes' ('Tu protección creció 12%') y del banner 'Tu hábito más seguro' por no ser medibles/calculables por el backend, preservando las métricas verificables (escaneos totales, amenazas bloqueadas, URLs analizadas, SMS analizados, desglose de riesgo y nota de persistencia)."
+    ],
+    "ultimo_resumen": "Depurada la pantalla StatsScreen eliminando los apartados de crecimiento mensual ('Este mes') y el banner de 'Tu hábito más seguro' por no tener respaldo en el contrato o base de datos del backend. Se mantuvieron las métricas reales soportadas por UserMetrics y el backend (escaneos totales, amenazas bloqueadas, desglose por tipo SMS/URL y distribución de riesgo). Suite de pruebas actualizada y pasando al 100%.",
+    "proximos_pasos_inmediatos": [
+      "1. Ratificar formalmente el gestor de estado (Riverpod vs Bloc - DPF-01) y aprobar dependencias en pubspec.yaml (DPF-02).",
+      "2. Instalar dio y flutter_secure_storage para implementar interceptores de red y refresco de tokens (core/network y core/storage).",
+      "3. Conectar endpoints reales del backend cuando estén disponibles (POST /api/v1/analysis, GET /api/v1/analysis, GET /api/v1/metrics)."
+    ]
+  }
+}
+
