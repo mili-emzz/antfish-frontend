@@ -36,7 +36,6 @@ class ProfileScreen extends StatelessWidget {
         const PageHeader(
           eyebrow: AppStrings.profileEyebrow,
           title: AppStrings.profileTitle,
-          copy: AppStrings.profileCopy,
         ),
         // .profile-card
         GlassPanel(

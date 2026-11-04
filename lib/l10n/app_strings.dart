@@ -160,19 +160,14 @@ abstract final class AppStrings {
   static const String historyFilterUrls = 'Enlaces';
   static const String historyFilterSms = 'Mensajes';
 
-  // Métricas (StatsScreen en App.tsx)
+  // Métricas (StatsScreen)
   static const String statsEyebrow = 'TU IMPACTO';
   static const String statsTitle = 'Métricas de protección';
   static const String statsCopy =
       'Cada análisis suma una capa más de tranquilidad digital.';
   static const String statsRingLabel = 'nivel seguro';
-  static const String statsHeroEyebrow = 'ESTE MES';
-  static const String statsHeroTitleLead = 'Tu protección creció ';
-  static const String statsHeroTitleAccent = '12%';
-  static const String statsHeroCopy =
-      'Has evitado interactuar con 7 amenazas potenciales.';
   static const String statsMetricTotalScans = 'Escaneos totales';
-  static const String statsMetricTotalScansSub = '+18 este mes';
+  static const String statsMetricTotalScansSub = 'Histórico acumulado';
   static const String statsMetricBlocked = 'Amenazas bloqueadas';
   static const String statsMetricBlockedSub = '15.5% del total';
   static const String statsMetricUrls = 'Enlaces analizados';
@@ -181,31 +176,26 @@ abstract final class AppStrings {
   static const String statsMetricSmsSub = '39% de actividad';
   static const String statsBreakdownEyebrow = 'DESGLOSE';
   static const String statsBreakdownTitle = 'Nivel de riesgo';
-  static const String statsBreakdownPeriod = 'Últimos 30 días';
+  static const String statsBreakdownPeriod = 'Historial completo';
   static const String statsRiskSafe = 'Seguro';
   static const String statsRiskMedium = 'Riesgo medio';
   static const String statsRiskHigh = 'Riesgo alto';
   static const String statsRiskCritical = 'Crítico';
-  static const String statsInsightTitle = 'Tu hábito más seguro';
-  static const String statsInsightCopy =
-      'Analizas el 84% de los enlaces antes de abrirlos.';
   static const String statsPersistenceNote =
       'Eliminar un análisis del historial no reduce los contadores históricos.';
 
   // Perfil (ProfileScreen en App.tsx)
   static const String profileEyebrow = 'CUENTA PROTEGIDA';
   static const String profileTitle = 'Tu perfil';
-  static const String profileCopy =
-      'Administra tu espacio, privacidad y preferencias.';
   static const String profileDemoName = 'Alex Morgan';
   static const String profileDemoEmail = 'alex@correo.com';
   static const String profileVerifiedBadge = 'Correo verificado';
   static const String profileSecurityTitle = 'Centro de seguridad';
-  static const String profileSecuritySubtitle = 'Contraseña y sesiones activas';
+  static const String profileSecuritySubtitle = 'Cambiar contraseña';
   static const String profilePrivacyTitle = 'Privacidad';
-  static const String profilePrivacySubtitle = 'Datos y permisos de análisis';
-  static const String profilePreferencesTitle = 'Preferencias';
-  static const String profilePreferencesSubtitle = 'Alertas y notificaciones';
+  static const String profilePrivacySubtitle = 'Lee nuestro aviso de privacidad';
+  static const String profilePreferencesTitle = 'Términos y condiciones';
+  static const String profilePreferencesSubtitle = 'Conoce los términos del servicio';
   static const String profileLogout = 'Cerrar sesión';
   static const String profileVersion = 'AntFish 1.0 · Tu escudo digital';
 }

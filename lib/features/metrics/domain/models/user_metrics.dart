@@ -9,7 +9,6 @@ class UserMetrics {
     required this.amenazasBloqueadas,
     required this.desglosePorTipo,
     required this.distribucionRiesgo,
-    required this.anilloSeguridadPorcentaje,
   });
 
   final int totalEscaneos;
@@ -17,5 +16,4 @@ class UserMetrics {
   final Map<String, int> desglosePorTipo; // {'sms': n, 'url': m}
   final Map<String, int>
   distribucionRiesgo; // {'bajo': a, 'medio': b, 'alto': c, 'critico': d}
-  final double anilloSeguridadPorcentaje; // 0..100
 }

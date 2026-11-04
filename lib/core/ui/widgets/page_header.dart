@@ -13,12 +13,12 @@ class PageHeader extends StatelessWidget {
     super.key,
     required this.eyebrow,
     required this.title,
-    required this.copy,
+    this.copy,
   });
 
   final String eyebrow;
   final String title;
-  final String copy;
+  final String? copy;
 
   @override
   Widget build(BuildContext context) {
@@ -33,11 +33,13 @@ class PageHeader extends StatelessWidget {
         Text(eyebrow, style: AppTextStyles.eyebrow),
         const SizedBox(height: 10),
         Text(title, style: AppTextStyles.pageHeaderTitle),
-        const SizedBox(height: 8),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 430),
-          child: Text(copy, style: AppTextStyles.pageHeaderCopy),
-        ),
+        if (copy != null) ...[
+          const SizedBox(height: 8),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 430),
+            child: Text(copy!, style: AppTextStyles.pageHeaderCopy),
+          ),
+        ],
         const SizedBox(height: 27),
       ],
     );

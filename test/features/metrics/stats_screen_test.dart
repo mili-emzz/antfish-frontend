@@ -22,7 +22,7 @@ Future<void> _pumpStats(
 
 void main() {
   group('StatsScreen (Fase 4)', () {
-    testWidgets('Renderiza cabecera, hero card, cuadrícula y desglose', (
+    testWidgets('Renderiza cabecera, cuadrícula y desglose de amenazas', (
       tester,
     ) async {
       await _pumpStats(tester);
@@ -34,8 +34,11 @@ void main() {
       expect(find.text(AppStrings.statsMetricUrls), findsOneWidget);
       expect(find.text(AppStrings.statsMetricSms), findsOneWidget);
       expect(find.text(AppStrings.statsBreakdownTitle), findsOneWidget);
-      expect(find.text(AppStrings.statsInsightTitle), findsOneWidget);
       expect(find.text(AppStrings.statsPersistenceNote), findsOneWidget);
+
+      // Verificación de que los apartados no medibles fueron eliminados
+      expect(find.text('ESTE MES'), findsNothing);
+      expect(find.text('Tu hábito más seguro'), findsNothing);
     });
 
     testWidgets('Sin overflow en pantallas de 320x568 y texto al 200 %', (

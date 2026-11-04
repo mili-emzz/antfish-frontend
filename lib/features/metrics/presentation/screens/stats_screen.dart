@@ -64,9 +64,7 @@ class StatsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenSize = ScreenSize.of(context);
-    final bool isCompact = screenSize.isCompact;
     final bool isExpanded = screenSize.isExpanded;
-    final double heroTitleSize = isCompact ? 17 : 21;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -77,64 +75,6 @@ class StatsScreen extends StatelessWidget {
           title: AppStrings.statsTitle,
           copy: AppStrings.statsCopy,
         ),
-        // .stats-hero
-        GlassPanel(
-          borderRadius: 23,
-          padding: EdgeInsets.symmetric(
-            horizontal: isCompact ? 20 : 28,
-            vertical: isCompact ? 20 : 23,
-          ),
-          elevated: true,
-          child: Row(
-            children: [
-                            SizedBox(width: isCompact ? 18 : 28),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      AppStrings.statsHeroEyebrow,
-                      style: AppTextStyles.eyebrow,
-                    ),
-                    const SizedBox(height: 10),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 300),
-                      child: Text.rich(
-                        TextSpan(
-                          children: const [
-                            TextSpan(text: AppStrings.statsHeroTitleLead),
-                            TextSpan(
-                              text: AppStrings.statsHeroTitleAccent,
-                              style: TextStyle(color: AppColors.gold),
-                            ),
-                          ],
-                          style: TextStyle(
-                            fontFamily: AppTextStyles.display,
-                            fontSize: heroTitleSize,
-                            fontWeight: FontWeight.w700,
-                            height: 1.25,
-                            color: AppColors.textLight,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 7),
-                    const Text(
-                      AppStrings.statsHeroCopy,
-                      style: TextStyle(
-                        fontFamily: AppTextStyles.body,
-                        fontSize: 10,
-                        color: Color(0xFF918596),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 15),
         // .metric-grid (4 columnas en >800px, 2x2 en <=800px)
         if (isExpanded)
           Row(
@@ -226,54 +166,6 @@ class StatsScreen extends StatelessWidget {
                   fontFamily: AppTextStyles.body,
                   fontSize: 9,
                   color: Color(0xFF756B79),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        // .insight-card
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 17),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0x21D7BA89)),
-            gradient: const LinearGradient(
-              colors: [Color(0x17D7BA89), Color(0x0AB47EB3)],
-            ),
-          ),
-          child: const Row(
-            children: [
-              Icon(
-                Icons.auto_awesome_outlined,
-                size: 22,
-                color: AppColors.gold,
-              ),
-              SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      AppStrings.statsInsightTitle,
-                      style: TextStyle(
-                        fontFamily: AppTextStyles.body,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFFE4DBE5),
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      AppStrings.statsInsightCopy,
-                      style: TextStyle(
-                        fontFamily: AppTextStyles.body,
-                        fontSize: 9,
-                        color: Color(0xFF857A89),
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ],
