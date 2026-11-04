@@ -4,7 +4,6 @@ import '../../../../core/ui/layout/breakpoints.dart';
 import '../../../../core/ui/theme/app_colors.dart';
 import '../../../../core/ui/theme/app_text_styles.dart';
 import '../../../../core/ui/widgets/brand_mark.dart';
-import '../../../../core/ui/widgets/security_ring.dart';
 import '../../../../l10n/app_strings.dart';
 import '../widgets/history_row_item.dart';
 import '../widgets/risk_traffic_light_card.dart';
@@ -109,7 +108,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            const SecurityRing(),
           ],
         ),
         SizedBox(height: isCompact ? 23 : 30),

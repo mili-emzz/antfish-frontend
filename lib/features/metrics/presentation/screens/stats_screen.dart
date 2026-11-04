@@ -5,7 +5,6 @@ import '../../../../core/ui/theme/app_colors.dart';
 import '../../../../core/ui/theme/app_text_styles.dart';
 import '../../../../core/ui/widgets/glass_panel.dart';
 import '../../../../core/ui/widgets/page_header.dart';
-import '../../../../core/ui/widgets/security_ring.dart';
 import '../../../../l10n/app_strings.dart';
 
 /// Pantalla de métricas de protección (`StatsScreen` en App.tsx).
@@ -88,12 +87,7 @@ class StatsScreen extends StatelessWidget {
           elevated: true,
           child: Row(
             children: [
-              const SecurityRing(
-                score: 86,
-                label: AppStrings.statsRingLabel,
-                large: true,
-              ),
-              SizedBox(width: isCompact ? 18 : 28),
+                            SizedBox(width: isCompact ? 18 : 28),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
