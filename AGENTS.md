@@ -192,17 +192,28 @@ El cliente **no inventa endpoints ni campos**. Toda pantalla debe responder a un
 
 ## 12. Git, Ramas y Commits
 
-* **Ramas:**
-  * Features: `feat/nombre-feature`
-  * Correcciones: `fix/descripcion-bug`
-  * Documentación: `docs/tema`
-* **Commits:** Formato *Conventional Commits*, indicando el Caso de Uso (CU-xx), Requerimiento (RF-xx) o regla (RN-xx) asociado:
+### Verificación de Rama Activa y Sincronización Previa:
+Antes de escribir código o hacer commits, verificar siempre la rama activa con `git branch --show-current` o `git status`. Además, es **obligatorio ejecutar siempre `git pull`** antes de empezar a trabajar para asegurar que la copia local esté sincronizada con los últimos cambios remotos. Los cambios deben desarrollarse en la rama asignada según el feature y subirse a su respectiva rama remota.
+
+### Mapa Oficial de Ramas:
+* `main`: Código 100% funcional y listo para producción. **Prohibido tocar directamente.** Su única regla es que cada cambio integrado debe estar completamente validado por pruebas automatizadas aprobadas.
+* `develop`: Rama de integración donde se unifica todo el trabajo de las ramas antes de promoverlo a `main`.
+* `auth`: Todo lo relativo a autenticación (Login, Registro, verificación por correo, recuperación de contraseña): vistas, lógica de estados, validaciones y consumo de API.
+* `main-view`: Es **exclusivamente la vista** de la pantalla Home (interfaz de escáner, semáforo visual, selectores, campos y estados visuales).
+  * **Regla de separación especial:** `main-view` es la **única** rama que separa su vista de su lógica a otra rama, debido a que el escaneo y análisis es el núcleo más delicado del proyecto.
+* `analysis-flow`: Rama dedicada a la lógica, orquestación y consumo de la API de análisis (envío de URLs y SMS del frontend al backend, recepción de resultados y manejo de scores).
+* `metrics-view`: Estadísticas y métricas de usuario: al igual que `auth`, contiene tanto vistas como lógica y consumo de API.
+
+### Commits Atómicos y Secuencia Segura:
+* **Cada cambio por feature debe tener un commit independiente** para mantener un historial limpio, trazable y con reversiones seguras.
+* Evitar commits masivos que combinen múltiples features o cambios no relacionados.
+* Cada commit debe dejar el proyecto funcional, sin errores de compilación (`flutter analyze`) y pasando las pruebas (`flutter test`).
+* Formato: *Conventional Commits*, indicando el Caso de Uso (CU-xx), Requerimiento (RF-xx) o regla (RN-xx) asociado:
   ```text
   feat(auth): implementar formulario y validacion de codigo de verificacion (CU-02, RF-06.2)
   fix(network): corregir race condition en refresh token interceptor
   test(analysis): agregar golden tests para semaforo de riesgo critico
   ```
-* **Tamaño:** Cambios pequeños, atómicos y comprobables.
 
 ---
 
@@ -222,3 +233,4 @@ Cualquier trabajo relacionado con estas áreas debe verificar si la decisión ya
 | Versión | Fecha | Resumen |
 |---|---|---|
 | 3.0 | 2026-11-02 | Adaptación completa de AGENTS.md para el frontend Flutter: fuentes de verdad, comandos de Dart/Flutter, reglas de arquitectura feature-first, convenciones, seguridad, reglas de dominio en UI, integración con DESIGN.md y decisiones DPF-01 a DPF-05. |
+| 3.1 | 2026-11-14 | Implementación de regla de commits atómicos por feature, verificación obligatoria de rama activa y mapa oficial de ramas (auth, main-view, analysis-flow, metrics-view, develop, main). |
