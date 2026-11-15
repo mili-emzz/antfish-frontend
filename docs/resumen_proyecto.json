@@ -161,9 +161,9 @@
     },
     {
       "id": "DT-16",
-      "tema": "Estrategia de ramas Git y commits atómicos por feature",
-      "decision": "Obligatoriedad de commits atómicos por feature y verificación previa de rama activa. Mapeo: 'main' (producción validado por pruebas), 'develop' (unificación), 'auth' (vistas, lógica y API auth), 'main-view' (exclusivamente vista Home), 'analysis-flow' (lógica y consumo de API de análisis, única feature que desacopla vista y lógica por criticidad) y 'metrics-view' (vistas, lógica y API métricas).",
-      "razon": "Garantizar trazabilidad limpia, reversiones seguras y control estricto sobre el flujo de análisis que es el núcleo crítico de AntFish."
+      "tema": "Estrategia de ramas Git, sincronización previa y commits atómicos por feature",
+      "decision": "Obligatoriedad de commits atómicos por feature, verificación previa de rama activa y ejecución mandatoria de 'git pull' antes de empezar a trabajar. Mapeo: 'main' (producción validado por pruebas), 'develop' (unificación), 'auth' (vistas, lógica y API auth), 'main-view' (exclusivamente vista Home), 'analysis-flow' (lógica y consumo de API de análisis, única feature que desacopla vista y lógica por criticidad) y 'metrics-view' (vistas, lógica y API métricas).",
+      "razon": "Garantizar trazabilidad limpia, evitar conflictos por desactualización local y mantener control estricto sobre el flujo de análisis que es el núcleo crítico de AntFish."
     }
   ],
   "decisiones_pendientes_a_ratificar": [
@@ -265,9 +265,9 @@
       "DT-13: Migración de pantallas del shell (HomeScreen, HistoryScreen, StatsScreen y ProfileScreen) como plantillas UI sin backend: SecurityRing transversal en core/ui/, botones que requieren API (POST /api/v1/analysis, detalle de historial y submenús de ajustes) deshabilitados (onPressed/onTap: null), cero persistencia local de texto de SMS y controles locales (selector URL/SMS, limpiar campo, filtros de historial, navegación entre pestañas y logout local) activos.",
       "DT-14: Refactorización y verificación integral: corrección de overflow por escalado de texto en la cabecera de ThreatBreakdown (Wrap responsivo), adición de soporte initialShowResult y onDismiss en HomeScreen/ResultCard para alternar con RiskTrafficLightCard, y desactivación (onPressed: null) de los botones de Login y Registro que requieren del backend ('Entrar de forma segura', '¿Olvidaste tu contraseña?', 'Crear cuenta segura', 'Continuar con Google', 'Términos' y 'Privacidad').",
       "DT-15: Depuración de StatsScreen para alinearse estrictamente al modelo de datos del backend (UserMetrics): eliminación del bloque hero 'Este mes' ('Tu protección creció 12%') y del banner 'Tu hábito más seguro' por no ser medibles/calculables por el backend, preservando las métricas verificables (escaneos totales, amenazas bloqueadas, URLs analizadas, SMS analizados, desglose de riesgo y nota de persistencia).",
-      "DT-16: Estrategia de ramas Git y commits atómicos por feature: verificación previa obligatoria de rama activa, mapeo estricto de responsabilidades (auth, main-view, analysis-flow, metrics-view, develop, main) y desacople de vista/lógica únicamente en el flujo de análisis por criticidad."
+      "DT-16: Estrategia de ramas Git, sincronización previa y commits atómicos por feature: verificación previa obligatoria de rama activa, 'git pull' mandatorio antes de trabajar, mapeo estricto de responsabilidades (auth, main-view, analysis-flow, metrics-view, develop, main) y desacople de vista/lógica únicamente en el flujo de análisis por criticidad."
     ],
-    "ultimo_resumen": "Formalizada la regla de flujo Git y versionado: commits atómicos por feature, verificación obligatoria de rama activa y definición del mapa de ramas (auth, main-view solo vista, analysis-flow para lógica de análisis, metrics-view, develop para unificación y main protegida para producción validada por pruebas). Documentado en .agents/rules/git_workflow_branches_commits.md y AGENTS.md §12.",
+    "ultimo_resumen": "Formalizada la regla de flujo Git y versionado: commits atómicos por feature, sincronización obligatoria ('git pull' antes de empezar), verificación de rama activa y mapa de ramas (auth, main-view solo vista, analysis-flow para lógica de análisis, metrics-view, develop para unificación y main protegida para producción validada por pruebas). Documentado en .agents/rules/git_workflow_branches_commits.md y AGENTS.md §12.",
     "proximos_pasos_inmediatos": [
       "1. Ratificar formalmente el gestor de estado (Riverpod vs Bloc - DPF-01) y aprobar dependencias en pubspec.yaml (DPF-02).",
       "2. Instalar dio y flutter_secure_storage para implementar interceptores de red y refresco de tokens (core/network y core/storage).",

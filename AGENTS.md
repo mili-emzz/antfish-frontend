@@ -192,8 +192,8 @@ El cliente **no inventa endpoints ni campos**. Toda pantalla debe responder a un
 
 ## 12. Git, Ramas y Commits
 
-### Verificación de Rama Activa:
-Antes de escribir código o hacer commits, verificar siempre la rama activa con `git branch --show-current` o `git status`. Los cambios deben desarrollarse en la rama asignada según el feature y subirse a su respectiva rama remota.
+### Verificación de Rama Activa y Sincronización Previa:
+Antes de escribir código o hacer commits, verificar siempre la rama activa con `git branch --show-current` o `git status`. Además, es **obligatorio ejecutar siempre `git pull`** antes de empezar a trabajar para asegurar que la copia local esté sincronizada con los últimos cambios remotos. Los cambios deben desarrollarse en la rama asignada según el feature y subirse a su respectiva rama remota.
 
 ### Mapa Oficial de Ramas:
 * `main`: Código 100% funcional y listo para producción. **Prohibido tocar directamente.** Su única regla es que cada cambio integrado debe estar completamente validado por pruebas automatizadas aprobadas.

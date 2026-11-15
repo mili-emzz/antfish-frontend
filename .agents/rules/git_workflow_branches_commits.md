@@ -1,8 +1,9 @@
 # Regla de Flujo Git: Ramas por Feature y Commits Atómicos
 
-## 1. Verificación Obligatoria de Rama Activa
-Antes de realizar cualquier modificación, el agente o desarrollador DEBE verificar en qué rama se encuentra (`git branch --show-current` o `git status`) y confirmar que coincide con la feature en la que va a trabajar.
-Nunca realizar cambios en una rama incorrecta ni trabajar directamente sobre `main` o `develop`.
+## 1. Verificación de Rama Activa y Sincronización Previa (git pull)
+Antes de realizar cualquier modificación o comenzar a trabajar en una feature, el agente o desarrollador DEBE cumplir dos pasos obligatorios:
+1. **Verificar rama:** Comprobar en qué rama se encuentra (`git branch --show-current` o `git status`) y confirmar que coincide con la feature asignada. Nunca trabajar sobre la rama equivocada ni hacer commits directos en `main`.
+2. **Sincronización obligatoria (`git pull`):** Ejecutar SIEMPRE `git pull` (o `git pull origin <rama>`) antes de empezar a escribir código para garantizar que el proyecto local esté completamente actualizado con el repositorio remoto y evitar conflictos innecesarios.
 
 ## 2. Mapa Oficial de Ramas y Responsabilidades
 * `main`: Código funcional de producción. Prohibido tocar directamente. Su única regla de admisión es que debe estar completamente validado por pruebas automatizadas aprobadas.
