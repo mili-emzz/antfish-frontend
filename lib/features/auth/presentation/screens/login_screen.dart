@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/ui/widgets/app_alert.dart';
 import '../../../../core/ui/widgets/app_buttons.dart';
 import '../../../../core/ui/widgets/crystal_text_field.dart';
@@ -36,6 +37,28 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  /// Aplica el resultado de un intento de autenticación (login o Google).
+  void _handleResult(AuthAttemptResult result) {
+    switch (result) {
+      case AuthSuccess():
+        Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+        return;
+      case AuthNeedsVerification(:final email):
+        Navigator.of(context)
+            .pushReplacementNamed(AppRoutes.verifyEmail, arguments: email);
+        return;
+      case AuthCancelled():
+        break;
+      case AuthUnavailable():
+        _alertMessage = AppStrings.templateBackendPending;
+        _alertVariant = AlertVariant.info;
+      case AuthError(:final message):
+        _alertMessage = message;
+        _alertVariant = AlertVariant.error;
+    }
+    setState(() => _isSubmitting = false);
+  }
+
   Future<void> _googleSignIn() async {
     if (_isSubmitting) return;
     FocusScope.of(context).unfocus();
@@ -46,28 +69,38 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final result = await runGoogleSignIn(context);
     if (!mounted) return;
+    _handleResult(result);
+  }
+
+  Future<void> _submit() async {
+    if (_isSubmitting) return;
+    FocusScope.of(context).unfocus();
+
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      setState(() {
+        _alertMessage = AppStrings.validationFormHasErrors;
+        _alertVariant = AlertVariant.warning;
+      });
+      return;
+    }
 
     setState(() {
-      _isSubmitting = false;
-      switch (result) {
-        case GoogleSignInSuccess():
-          _alertMessage = AppStrings.googleSignInSuccess;
-          _alertVariant = AlertVariant.success;
-        case GoogleSignInCancelled():
-          break;
-        case GoogleSignInUnavailable():
-          _alertMessage = AppStrings.templateBackendPending;
-          _alertVariant = AlertVariant.info;
-        case GoogleSignInError(:final message):
-          _alertMessage = message;
-          _alertVariant = AlertVariant.error;
-      }
+      _isSubmitting = true;
+      _alertMessage = null;
     });
+
+    final result = await runLogin(
+      context,
+      email: _emailController.text,
+      password: _passwordController.text,
+    );
+    if (!mounted) return;
+    _handleResult(result);
   }
 
   @override
   Widget build(BuildContext context) {
-    final hasGoogleAuth = AuthScope.maybeOf(context)?.repository != null;
+    final hasBackend = AuthScope.maybeOf(context)?.repository != null;
 
     return AuthScaffold(
       mode: AuthMode.login,
@@ -129,16 +162,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 6),
-              const PrimaryButton(
+              PrimaryButton(
                 label: AppStrings.loginSubmit,
-                // Deshabilitado hasta conectar POST /api/v1/auth/login.
-                onPressed: null,
+                isLoading: _isSubmitting,
+                onPressed: hasBackend ? _submit : null,
               ),
               const SizedBox(height: 14),
               const AuthPrivacyNote(),
               AuthFormFooter(
-                enabled: hasGoogleAuth && !_isSubmitting,
-                onGooglePressed: hasGoogleAuth ? _googleSignIn : null,
+                enabled: hasBackend && !_isSubmitting,
+                onGooglePressed: hasBackend ? _googleSignIn : null,
               ),
             ],
           ),

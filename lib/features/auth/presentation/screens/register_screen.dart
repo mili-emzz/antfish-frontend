@@ -42,6 +42,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  /// Aplica el resultado de un intento de autenticación (registro o Google).
+  void _handleResult(AuthAttemptResult result) {
+    switch (result) {
+      case AuthSuccess():
+        Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+        return;
+      case AuthNeedsVerification(:final email):
+        Navigator.of(context)
+            .pushReplacementNamed(AppRoutes.verifyEmail, arguments: email);
+        return;
+      case AuthCancelled():
+        break;
+      case AuthUnavailable():
+        _alertMessage = AppStrings.templateBackendPending;
+        _alertVariant = AlertVariant.info;
+      case AuthError(:final message):
+        _alertMessage = message;
+        _alertVariant = AlertVariant.error;
+    }
+    setState(() => _isSubmitting = false);
+  }
+
   Future<void> _googleSignIn() async {
     if (_isSubmitting) return;
     FocusScope.of(context).unfocus();
@@ -52,28 +74,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     final result = await runGoogleSignIn(context);
     if (!mounted) return;
+    _handleResult(result);
+  }
+
+  Future<void> _submit() async {
+    if (_isSubmitting) return;
+    FocusScope.of(context).unfocus();
+
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      setState(() {
+        _alertMessage = AppStrings.validationFormHasErrors;
+        _alertVariant = AlertVariant.warning;
+      });
+      return;
+    }
 
     setState(() {
-      _isSubmitting = false;
-      switch (result) {
-        case GoogleSignInSuccess():
-          _alertMessage = AppStrings.googleSignInSuccess;
-          _alertVariant = AlertVariant.success;
-        case GoogleSignInCancelled():
-          break;
-        case GoogleSignInUnavailable():
-          _alertMessage = AppStrings.templateBackendPending;
-          _alertVariant = AlertVariant.info;
-        case GoogleSignInError(:final message):
-          _alertMessage = message;
-          _alertVariant = AlertVariant.error;
-      }
+      _isSubmitting = true;
+      _alertMessage = null;
     });
+
+    final result = await runRegister(
+      context,
+      email: _emailController.text,
+      password: _passwordController.text,
+      nombre: _nameController.text,
+    );
+    if (!mounted) return;
+    _handleResult(result);
   }
 
   @override
   Widget build(BuildContext context) {
-    final hasGoogleAuth = AuthScope.maybeOf(context)?.repository != null;
+    final hasBackend = AuthScope.maybeOf(context)?.repository != null;
 
     // Con "atrás" en Android se vuelve a Login en vez de cerrar la app.
     return PopScope(
@@ -152,16 +185,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   validator: AuthValidators.newPassword,
                 ),
                 const SizedBox(height: 22),
-                const PrimaryButton(
+                PrimaryButton(
                   label: AppStrings.registerSubmit,
-                  // Deshabilitado hasta conectar POST /api/v1/auth/register.
-                  onPressed: null,
+                  isLoading: _isSubmitting,
+                  onPressed: hasBackend ? _submit : null,
                 ),
                 const SizedBox(height: 14),
                 const AuthPrivacyNote(),
                 AuthFormFooter(
-                  enabled: hasGoogleAuth && !_isSubmitting,
-                  onGooglePressed: hasGoogleAuth ? _googleSignIn : null,
+                  enabled: hasBackend && !_isSubmitting,
+                  onGooglePressed: hasBackend ? _googleSignIn : null,
                 ),
               ],
             ),
