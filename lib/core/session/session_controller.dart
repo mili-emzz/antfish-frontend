@@ -28,6 +28,12 @@ class SessionController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Cuenta registrada o sin verificar: se espera el código de 6 dígitos.
+  void markPendingVerification(String email) {
+    _state = SessionPendingVerification(email: email);
+    notifyListeners();
+  }
+
   /// Logout local: no existe endpoint de revocación en el backend.
   Future<void> signOut() async {
     await _storage.clear();
