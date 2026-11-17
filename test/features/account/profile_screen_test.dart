@@ -1,9 +1,25 @@
 import 'package:antfish/app.dart';
 import 'package:antfish/core/router/app_routes.dart';
+import 'package:antfish/core/session/session_controller.dart';
+import 'package:antfish/core/session/session_state.dart';
+import 'package:antfish/core/storage/token_storage.dart';
 import 'package:antfish/features/account/presentation/screens/profile_screen.dart';
 import 'package:antfish/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+class _FakeStorage implements TokenStorage {
+  String? token;
+
+  @override
+  Future<String?> readRefreshToken() async => token;
+
+  @override
+  Future<void> saveRefreshToken(String t) async => token = t;
+
+  @override
+  Future<void> clear() async => token = null;
+}
 
 Future<void> _pumpProfile(
   WidgetTester tester, {
@@ -38,13 +54,36 @@ void main() {
       expect(find.text(AppStrings.profileLogout), findsOneWidget);
     });
 
-    testWidgets('Cerrar sesión redirige a pantalla de Login', (tester) async {
-      await _pumpProfile(tester);
+    testWidgets('Cerrar sesión limpia SessionController y redirige a Login', (
+      tester,
+    ) async {
+      final storage = _FakeStorage();
+      final session = SessionController(storage);
+      await session.signIn(
+        accessToken: 'acc',
+        refreshToken: 'ref',
+        userEmail: 'carlos@antfish.app',
+        userName: 'Carlos Ramírez',
+      );
+
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        AntFishApp(initialRoute: AppRoutes.profile, sessionController: session),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Carlos Ramírez'), findsOneWidget);
+      expect(find.text('carlos@antfish.app'), findsOneWidget);
 
       await tester.tap(find.text(AppStrings.profileLogout));
       await tester.pumpAndSettle();
 
       expect(find.text(AppStrings.loginTitle), findsOneWidget);
+      expect(session.state, isA<SessionUnauthenticated>());
+      expect(await storage.readRefreshToken(), isNull);
     });
 
     testWidgets('Sin overflow en pantallas de 320x568 y texto al 200 %', (

@@ -220,6 +220,74 @@ void main() {
         throwsA(isA<RateLimitFailure>()),
       );
     });
+
+    test('verifyEmail 200 envía email y codigo y devuelve mensaje', () async {
+      stubPost(
+        '/auth/verify-email',
+        Future.value(
+          _ok('/auth/verify-email', 200, {
+            'mensaje': 'Cuenta verificada exitosamente.',
+          }),
+        ),
+      );
+
+      final msg = await repo.verifyEmail(
+        email: ' User@Mail.com ',
+        code: '123456',
+      );
+      expect(msg, 'Cuenta verificada exitosamente.');
+      verify(
+        () => dio.post<Map<String, dynamic>>(
+          '/auth/verify-email',
+          data: {'email': 'user@mail.com', 'codigo': '123456'},
+        ),
+      ).called(1);
+    });
+
+    test('verifyEmail 400 lanza ValidationFailure con detail', () async {
+      when(
+        () => dio.post<Map<String, dynamic>>(
+          '/auth/verify-email',
+          data: any(named: 'data'),
+        ),
+      ).thenThrow(
+        _error('/auth/verify-email', 400, {
+          'code': 'BAD_REQUEST',
+          'detail': 'Código inválido o expirado.',
+        }),
+      );
+
+      await expectLater(
+        repo.verifyEmail(email: 'a@b.com', code: '000000'),
+        throwsA(
+          isA<ValidationFailure>().having(
+            (f) => f.message,
+            'message',
+            'Código inválido o expirado.',
+          ),
+        ),
+      );
+    });
+
+    test('resendCode 200 envía email normalizado y devuelve mensaje', () async {
+      stubPost(
+        '/auth/resend-code',
+        Future.value(
+          _ok('/auth/resend-code', 200, {
+            'mensaje': 'Si la cuenta está pendiente de verificación, se envió un nuevo código.',
+          }),
+        ),
+      );
+
+      final msg = await repo.resendCode(email: ' User@Mail.com ');
+      expect(msg, contains('se envió un nuevo código'));
+      verify(
+        () => dio.post<Map<String, dynamic>>(
+          '/auth/resend-code',
+          data: {'email': 'user@mail.com'},
+        ),
+      ).called(1);
+    });
   });
 
   group('UI: login y registro locales', () {
@@ -395,6 +463,49 @@ void main() {
 
       expect(find.text(const ConflictFailure().message), findsOneWidget);
       expect(session.state, isA<SessionUnauthenticated>());
+    });
+
+    testWidgets('verifyEmail 200 redirige a /login', (tester) async {
+      when(
+        () => repository.verifyEmail(
+          email: any(named: 'email'),
+          code: any(named: 'code'),
+        ),
+      ).thenAnswer((_) async => AppStrings.verifySuccessDefault);
+
+      await tester.pumpWidget(
+        wrap(const VerifyEmailScreen(email: 'nuevo@b.com')),
+      );
+      await tester.enterText(find.byType(TextField), '123456');
+      await tapSubmit(tester, AppStrings.verifySubmit);
+      await tester.pumpAndSettle();
+
+      expect(find.text('ROUTE:/login:null'), findsOneWidget);
+    });
+
+    testWidgets('resendCode activa cooldown visual en el botón', (
+      tester,
+    ) async {
+      when(() => repository.resendCode(email: any(named: 'email')))
+          .thenAnswer((_) async => AppStrings.verifyResendDefault);
+
+      await tester.pumpWidget(
+        wrap(
+          const VerifyEmailScreen(
+            email: 'nuevo@b.com',
+            resendCooldownSeconds: 3,
+          ),
+        ),
+      );
+
+      await tapSubmit(tester, AppStrings.verifyResend);
+      await tester.pump();
+
+      expect(find.text(AppStrings.verifyResendCooldown(3)), findsOneWidget);
+      verify(() => repository.resendCode(email: 'nuevo@b.com')).called(1);
+
+      await tester.pump(const Duration(seconds: 3));
+      expect(find.text(AppStrings.verifyResend), findsOneWidget);
     });
   });
 }
