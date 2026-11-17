@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../../../core/errors/app_failure.dart';
@@ -68,6 +69,7 @@ Future<AuthAttemptResult> runGoogleSignIn(BuildContext context) async {
   final repository = scope?.repository;
   if (scope == null || repository == null) return const AuthUnavailable();
 
+  if (kDebugMode) debugPrint('[AUTH] Iniciando flujo Google Sign-In');
   try {
     final session = await repository.signInWithGoogle();
     if (session == null) return const AuthCancelled();
@@ -78,17 +80,22 @@ Future<AuthAttemptResult> runGoogleSignIn(BuildContext context) async {
       userName: session.nombre,
       authProvider: session.proveedorAuth,
     );
+    if (kDebugMode) debugPrint('[AUTH] Google Sign-In completado -> /home');
     return const AuthSuccess();
   } on ConflictFailure catch (f) {
+    if (kDebugMode) debugPrint('[AUTH] Google Sign-In 409 (${f.code})');
     final msg = f.code == 'ACCOUNT_CONFLICT'
         ? f.message
         : AppStrings.googleEmailNotVerified;
     return AuthError(msg);
-  } on UnauthorizedFailure {
+  } on UnauthorizedFailure catch (f) {
+    if (kDebugMode) debugPrint('[AUTH] Google Sign-In 401 (${f.code})');
     return const AuthError(AppStrings.googleInvalidCredential);
   } on AppFailure catch (f) {
+    if (kDebugMode) debugPrint('[AUTH] Google Sign-In fallo (${f.code})');
     return AuthError(f.message);
-  } catch (_) {
+  } catch (e) {
+    if (kDebugMode) debugPrint('[AUTH] Google Sign-In error inesperado ($e)');
     return const AuthError(AppStrings.googleGenericError);
   }
 }
@@ -103,6 +110,7 @@ Future<AuthAttemptResult> runLogin(
   final repository = scope?.repository;
   if (scope == null || repository == null) return const AuthUnavailable();
 
+  if (kDebugMode) debugPrint('[AUTH] Iniciando login local');
   try {
     final session = await repository.login(email: email, password: password);
     await scope.session.signIn(
@@ -112,11 +120,18 @@ Future<AuthAttemptResult> runLogin(
       userName: session.nombre,
       authProvider: session.proveedorAuth,
     );
+    if (kDebugMode) debugPrint('[AUTH] Login local exitoso -> /home');
     return const AuthSuccess();
   } on AccountNotVerifiedFailure catch (f) {
+    if (kDebugMode) {
+      debugPrint(
+        '[AUTH] Login bloqueado: ACCOUNT_NOT_VERIFIED -> /verify-email',
+      );
+    }
     scope.session.markPendingVerification(f.email);
     return AuthNeedsVerification(f.email);
   } on AppFailure catch (f) {
+    if (kDebugMode) debugPrint('[AUTH] Login fallo (${f.code})');
     return AuthError(f.message);
   } catch (_) {
     return const AuthError(AppStrings.authGenericError);
@@ -134,6 +149,7 @@ Future<AuthAttemptResult> runRegister(
   final repository = scope?.repository;
   if (scope == null || repository == null) return const AuthUnavailable();
 
+  if (kDebugMode) debugPrint('[AUTH] Iniciando registro local');
   try {
     final result = await repository.register(
       email: email,
@@ -141,8 +157,14 @@ Future<AuthAttemptResult> runRegister(
       nombre: nombre,
     );
     scope.session.markPendingVerification(result.email);
+    if (kDebugMode) {
+      debugPrint(
+        '[AUTH] Registro exitoso (${result.estadoCuenta}) -> /verify-email',
+      );
+    }
     return AuthNeedsVerification(result.email);
   } on AppFailure catch (f) {
+    if (kDebugMode) debugPrint('[AUTH] Registro fallo (${f.code})');
     return AuthError(f.message);
   } catch (_) {
     return const AuthError(AppStrings.authGenericError);
@@ -159,11 +181,14 @@ Future<AuthAttemptResult> runVerifyEmail(
   final repository = scope?.repository;
   if (scope == null || repository == null) return const AuthUnavailable();
 
+  if (kDebugMode) debugPrint('[AUTH] Verificando código de 6 dígitos');
   try {
     final message = await repository.verifyEmail(email: email, code: code);
     await scope.session.signOut();
+    if (kDebugMode) debugPrint('[AUTH] Cuenta verificada -> /login');
     return AuthMessageSuccess(message);
   } on AppFailure catch (f) {
+    if (kDebugMode) debugPrint('[AUTH] Verificación falló (${f.code})');
     return AuthError(f.message);
   } catch (_) {
     return const AuthError(AppStrings.authGenericError);
@@ -179,10 +204,13 @@ Future<AuthAttemptResult> runResendCode(
   final repository = scope?.repository;
   if (scope == null || repository == null) return const AuthUnavailable();
 
+  if (kDebugMode) debugPrint('[AUTH] Solicitando reenvío de código');
   try {
     final message = await repository.resendCode(email: email);
+    if (kDebugMode) debugPrint('[AUTH] Reenvío aceptado -> iniciando cooldown');
     return AuthMessageSuccess(message);
   } on AppFailure catch (f) {
+    if (kDebugMode) debugPrint('[AUTH] Reenvío falló (${f.code})');
     return AuthError(f.message);
   } catch (_) {
     return const AuthError(AppStrings.authGenericError);

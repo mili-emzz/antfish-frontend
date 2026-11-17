@@ -112,6 +112,8 @@ abstract final class AppStrings {
       'No se pudo obtener la credencial de Google.';
   static const String googleGenericError =
       'No se pudo iniciar sesión con Google. Inténtalo de nuevo.';
+  static const String googleWebUnsupported =
+      'El inicio con Google directo desde este botón requiere probar en Android/iOS o usar una sesión de Google activa en el navegador.';
   static const String serverInvalidResponse =
       'Respuesta inesperada del servidor.';
   static const String authGenericError =

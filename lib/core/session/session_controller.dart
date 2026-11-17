@@ -36,6 +36,9 @@ class SessionController extends ChangeNotifier {
       userName: userName,
       authProvider: authProvider,
     );
+    if (kDebugMode) {
+      debugPrint('[SESSION] Autenticada (provider: $authProvider)');
+    }
     notifyListeners();
   }
 
@@ -52,12 +55,18 @@ class SessionController extends ChangeNotifier {
     } else {
       _state = SessionAuthenticated(accessToken: newAccessToken);
     }
+    if (kDebugMode) {
+      debugPrint('[SESSION] Access token renovado en memoria');
+    }
     notifyListeners();
   }
 
   /// Cuenta registrada o sin verificar: se espera el código de 6 dígitos.
   void markPendingVerification(String email) {
     _state = SessionPendingVerification(email: email);
+    if (kDebugMode) {
+      debugPrint('[SESSION] Estado -> pendingVerification');
+    }
     notifyListeners();
   }
 
@@ -65,6 +74,9 @@ class SessionController extends ChangeNotifier {
   Future<void> signOut() async {
     await _storage.clear();
     _state = const SessionUnauthenticated();
+    if (kDebugMode) {
+      debugPrint('[SESSION] Sesión cerrada y almacenamiento limpiado');
+    }
     notifyListeners();
   }
 }
