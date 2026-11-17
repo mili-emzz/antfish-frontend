@@ -6,9 +6,9 @@ import '../../../l10n/app_strings.dart';
 import '../domain/models/auth_session.dart';
 import '../domain/models/register_result.dart';
 
-/// Acceso remoto a los endpoints de autenticación (docs/contrato_api.md).
+/// Acceso remoto a los endpoints de autenticación (`docs/contrato_api_v2.md`).
 ///
-/// Ningún método reintenta automáticamente (AGENTS.md §7).
+/// Ningún método reintenta automáticamente (`AGENTS.md` §7).
 class AuthRemoteDataSource {
   AuthRemoteDataSource(this._dio);
 
@@ -38,7 +38,42 @@ class AuthRemoteDataSource {
     }
   }
 
-  /// `POST /auth/login` → `{access_token, refresh_token, token_type}`.
+  /// `POST /auth/verify-email` con `{"email": ..., "codigo": ...}`.
+  Future<String> verifyEmail({
+    required String email,
+    required String code,
+  }) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/auth/verify-email',
+        data: {'email': normalizeEmail(email), 'codigo': code.trim()},
+      );
+      final msg = response.data?['mensaje'];
+      return msg is String && msg.isNotEmpty
+          ? msg
+          : AppStrings.verifySuccessDefault;
+    } on DioException catch (e) {
+      throw ErrorMapper.fromDio(e);
+    }
+  }
+
+  /// `POST /auth/resend-code` con `{"email": ...}`.
+  Future<String> resendCode({required String email}) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/auth/resend-code',
+        data: {'email': normalizeEmail(email)},
+      );
+      final msg = response.data?['mensaje'];
+      return msg is String && msg.isNotEmpty
+          ? msg
+          : AppStrings.verifyResendDefault;
+    } on DioException catch (e) {
+      throw ErrorMapper.fromDio(e);
+    }
+  }
+
+  /// `POST /auth/login` → `{access_token, refresh_token, token_type, user}`.
   Future<AuthSession> login({
     required String email,
     required String password,
@@ -108,7 +143,6 @@ class AuthRemoteDataSource {
         code: 'INVALID_RESPONSE',
       );
     }
-    // `user` es opcional: el contrato de login solo devuelve los tokens.
     final user = json?['user'];
     final userMap = user is Map ? user : const {};
     return AuthSession(

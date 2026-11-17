@@ -25,14 +25,20 @@ class AuthScope extends InheritedWidget {
       repository != old.repository || session != old.session;
 }
 
-/// Resultado de un intento de autenticación (Google o login local).
+/// Resultado de un intento de autenticación (Google, login, registro o verificación).
 sealed class AuthAttemptResult {
   const AuthAttemptResult();
 }
 
-/// Sesión iniciada; se debe navegar al shell principal.
+/// Sesión iniciada; se debe navegar al shell principal (`/home`).
 final class AuthSuccess extends AuthAttemptResult {
   const AuthSuccess();
+}
+
+/// Operación completada con un mensaje informativo (p. ej. verificación o reenvío).
+final class AuthMessageSuccess extends AuthAttemptResult {
+  const AuthMessageSuccess(this.message);
+  final String message;
 }
 
 /// El usuario canceló el selector de Google; no se muestra nada.
@@ -69,11 +75,15 @@ Future<AuthAttemptResult> runGoogleSignIn(BuildContext context) async {
       accessToken: session.accessToken,
       refreshToken: session.refreshToken,
       userEmail: session.email,
+      userName: session.nombre,
       authProvider: session.proveedorAuth,
     );
     return const AuthSuccess();
-  } on ConflictFailure {
-    return const AuthError(AppStrings.googleEmailNotVerified);
+  } on ConflictFailure catch (f) {
+    final msg = f.code == 'ACCOUNT_CONFLICT'
+        ? f.message
+        : AppStrings.googleEmailNotVerified;
+    return AuthError(msg);
   } on UnauthorizedFailure {
     return const AuthError(AppStrings.googleInvalidCredential);
   } on AppFailure catch (f) {
@@ -99,6 +109,7 @@ Future<AuthAttemptResult> runLogin(
       accessToken: session.accessToken,
       refreshToken: session.refreshToken,
       userEmail: session.email,
+      userName: session.nombre,
       authProvider: session.proveedorAuth,
     );
     return const AuthSuccess();
@@ -131,6 +142,46 @@ Future<AuthAttemptResult> runRegister(
     );
     scope.session.markPendingVerification(result.email);
     return AuthNeedsVerification(result.email);
+  } on AppFailure catch (f) {
+    return AuthError(f.message);
+  } catch (_) {
+    return const AuthError(AppStrings.authGenericError);
+  }
+}
+
+/// Verificación de código de 6 dígitos (`POST /auth/verify-email`).
+Future<AuthAttemptResult> runVerifyEmail(
+  BuildContext context, {
+  required String email,
+  required String code,
+}) async {
+  final scope = AuthScope.maybeOf(context);
+  final repository = scope?.repository;
+  if (scope == null || repository == null) return const AuthUnavailable();
+
+  try {
+    final message = await repository.verifyEmail(email: email, code: code);
+    await scope.session.signOut();
+    return AuthMessageSuccess(message);
+  } on AppFailure catch (f) {
+    return AuthError(f.message);
+  } catch (_) {
+    return const AuthError(AppStrings.authGenericError);
+  }
+}
+
+/// Reenvío de código de verificación (`POST /auth/resend-code`, máx. 3/hora).
+Future<AuthAttemptResult> runResendCode(
+  BuildContext context, {
+  required String email,
+}) async {
+  final scope = AuthScope.maybeOf(context);
+  final repository = scope?.repository;
+  if (scope == null || repository == null) return const AuthUnavailable();
+
+  try {
+    final message = await repository.resendCode(email: email);
+    return AuthMessageSuccess(message);
   } on AppFailure catch (f) {
     return AuthError(f.message);
   } catch (_) {

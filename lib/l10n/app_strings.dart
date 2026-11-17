@@ -62,6 +62,12 @@ abstract final class AppStrings {
   static const String verifyChangeEmail = 'Cambiar correo electrónico';
   static const String verifyTemplateNotice =
       'Vista de plantilla: la verificación y el reenvío se activarán al conectar el servidor.';
+  static const String verifySuccessDefault =
+      'Cuenta verificada exitosamente. Ya puedes iniciar sesión.';
+  static const String verifyResendDefault =
+      'Si la cuenta está pendiente de verificación, se envió un nuevo código.';
+  static String verifyResendCooldown(int seconds) =>
+      'Reenviar código (${seconds}s)';
 
   // Campos
   static const String fieldNameLabel = 'Nombre';

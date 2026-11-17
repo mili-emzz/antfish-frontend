@@ -18,6 +18,14 @@ class AuthRepositoryImpl implements AuthRepository {
   }) => _remote.register(email: email, password: password, nombre: nombre);
 
   @override
+  Future<String> verifyEmail({required String email, required String code}) =>
+      _remote.verifyEmail(email: email, code: code);
+
+  @override
+  Future<String> resendCode({required String email}) =>
+      _remote.resendCode(email: email);
+
+  @override
   Future<AuthSession> login({
     required String email,
     required String password,

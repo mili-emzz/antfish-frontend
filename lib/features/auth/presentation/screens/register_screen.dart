@@ -54,6 +54,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       case AuthCancelled():
         break;
+      case AuthMessageSuccess(:final message):
+        _alertMessage = message;
+        _alertVariant = AlertVariant.success;
       case AuthUnavailable():
         _alertMessage = AppStrings.templateBackendPending;
         _alertVariant = AlertVariant.info;
