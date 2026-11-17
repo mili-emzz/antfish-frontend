@@ -108,6 +108,8 @@ abstract final class AppStrings {
       'No se pudo iniciar sesión con Google. Inténtalo de nuevo.';
   static const String serverInvalidResponse =
       'Respuesta inesperada del servidor.';
+  static const String authGenericError =
+      'No se pudo completar la operación. Inténtalo de nuevo.';
 
   // Estados de plantilla (sin backend)
   static const String templateBackendPending =
