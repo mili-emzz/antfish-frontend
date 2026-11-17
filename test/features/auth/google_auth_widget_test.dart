@@ -36,6 +36,12 @@ Widget _wrapWithAuth({
   return MaterialApp(
     theme: AppTheme.darkTheme,
     home: AuthScope(repository: repository, session: session, child: child),
+    // Rutas de destino simuladas: muestran el nombre y los argumentos.
+    onGenerateRoute: (settings) => MaterialPageRoute<void>(
+      settings: settings,
+      builder: (_) =>
+          Scaffold(body: Text('ROUTE:${settings.name}:${settings.arguments}')),
+    ),
   );
 }
 
@@ -86,7 +92,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text(AppStrings.googleSignInSuccess), findsOneWidget);
+        expect(find.text('ROUTE:/home:null'), findsOneWidget);
         expect(await storage.readRefreshToken(), 'jwt_refresh');
         expect(session.state, isA<SessionAuthenticated>());
         final authState = session.state as SessionAuthenticated;
