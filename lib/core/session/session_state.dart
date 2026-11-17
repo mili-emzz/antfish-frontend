@@ -28,10 +28,12 @@ final class SessionAuthenticated extends SessionState {
   const SessionAuthenticated({
     required this.accessToken,
     this.userEmail,
+    this.userName,
     this.authProvider = 'local',
   });
 
   final String accessToken;
   final String? userEmail;
+  final String? userName;
   final String authProvider;
 }
