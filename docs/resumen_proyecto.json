@@ -161,10 +161,16 @@
       "razon": "Mantenibilidad profesional y consistencia con las reglas de negocio."
     },
     {
-      "id": "DT-12",
-      "tema": "Gestión de Client IDs de OAuth y variables de entorno (.env)",
-      "decision": "Almacenar todos los identificadores de cliente OAuth (GOOGLE_WEB_CLIENT_ID, GOOGLE_ANDROID_CLIENT_ID) y API_BASE_URL exclusivamente en .env (excluido en .gitignore), inyectándolos mediante --dart-define-from-file=.env y leyéndolos con String.fromEnvironment en lib/core/config/env_config.dart.",
-      "razon": "Evita hardcodear credenciales en el repositorio y evita incluir .env como asset público dentro del APK/IPA."
+      "id": "DT-16",
+      "tema": "Estrategia de ramas Git, sincronización previa y commits atómicos por feature",
+      "decision": "Obligatoriedad de commits atómicos por feature, verificación previa de rama activa y ejecución mandatoria de 'git pull' antes de empezar a trabajar. Mapeo: 'main' (producción validado por pruebas), 'develop' (unificación), 'auth' (vistas, lógica y API auth), 'main-view' (exclusivamente vista Home), 'analysis-flow' (lógica y consumo de API de análisis, única feature que desacopla vista y lógica por criticidad) y 'metrics-view' (vistas, lógica y API métricas).",
+      "razon": "Garantizar trazabilidad limpia, evitar conflictos por desactualización local y mantener control estricto sobre el flujo de análisis que es el núcleo crítico de AntFish."
+    },
+    {
+      "id": "DT-17",
+      "tema": "Gestión de Client IDs de OAuth, variables de entorno (.env) y flujo Google Sign-In",
+      "decision": "Almacenar todos los identificadores de cliente OAuth (GOOGLE_WEB_CLIENT_ID, GOOGLE_ANDROID_CLIENT_ID) y API_BASE_URL exclusivamente en .env (excluido en .gitignore), inyectándolos mediante --dart-define-from-file=.env hacia EnvConfig, y conectar Google Sign-In (google_sign_in 7.x, dio, flutter_secure_storage) con POST /api/v1/auth/google.",
+      "razon": "Evita hardcodear credenciales en el repositorio y mantiene el flujo de autenticación OAuth desacoplado y seguro."
     }
   ],
   "decisiones_pendientes_a_ratificar": [
@@ -262,14 +268,19 @@
     "decisiones_tecnicas_tomadas": [
       "DT-10: Regla mandatoria del sistema (.agents/rules/sync_resumen_proyecto.md) y DoD en AGENTS.md para sincronizar docs/resumen_proyecto.json al finalizar cada tarea o cambio.",
       "DT-11: Implementación de plantilla UI pura de autenticación (Login y Registro) en Flutter Feature-First bajo estética Dark Crystal Cyber-Shield, responsive adaptativo (>800px dos columnas con visual hero narrativo; <=800px una columna; <=520px compacto), validadores puros y alertas sin dependencias externas bloqueantes.",
-      "DT-12: Regla mandatoria (.agents/rules/env_credentials.md) y actualización en AGENTS.md y .gitignore para que todos los Client IDs de OAuth y configuraciones residan en .env e inyecten vía --dart-define-from-file=.env hacia EnvConfig."
+      "DT-12: Migración Fase 1 del prototipo 'App de Escaneo Cyber-Shield' (App.tsx): creación de AppShell, CrystalBottomNav (con botón central elevado de escaneo) y PageHeader en core/ui/, y registro de las rutas /home, /history, /stats y /profile en AppRoutes y app.dart.",
+      "DT-13: Migración de pantallas del shell (HomeScreen, HistoryScreen, StatsScreen y ProfileScreen) como plantillas UI sin backend: SecurityRing transversal en core/ui/, botones que requieren API (POST /api/v1/analysis, detalle de historial y submenús de ajustes) deshabilitados (onPressed/onTap: null), cero persistencia local de texto de SMS y controles locales (selector URL/SMS, limpiar campo, filtros de historial, navegación entre pestañas y logout local) activos.",
+      "DT-14: Refactorización y verificación integral: corrección de overflow por escalado de texto en la cabecera de ThreatBreakdown (Wrap responsivo), adición de soporte initialShowResult y onDismiss en HomeScreen/ResultCard para alternar con RiskTrafficLightCard, y desactivación (onPressed: null) de los botones de Login y Registro que requieren del backend ('Entrar de forma segura', '¿Olvidaste tu contraseña?', 'Crear cuenta segura', 'Continuar con Google', 'Términos' y 'Privacidad').",
+      "DT-15: Depuración de StatsScreen para alinearse estrictamente al modelo de datos del backend (UserMetrics): eliminación del bloque hero 'Este mes' ('Tu protección creció 12%') y del banner 'Tu hábito más seguro' por no ser medibles/calculables por el backend, preservando las métricas verificables (escaneos totales, amenazas bloqueadas, URLs analizadas, SMS analizados, desglose de riesgo y nota de persistencia).",
+      "DT-16: Estrategia de ramas Git, sincronización previa y commits atómicos por feature: verificación previa obligatoria de rama activa, 'git pull' mandatorio antes de trabajar, mapeo estricto de responsabilidades (auth, main-view, analysis-flow, metrics-view, develop, main) y desacople de vista/lógica únicamente en el flujo de análisis por criticidad.",
+      "DT-17: Regla mandatoria (.agents/rules/env_credentials.md), configuración .env -> EnvConfig e implementación completa del flujo de Google Sign-In en el cliente (google_sign_in 7.x, dio, flutter_secure_storage, mocktail, ErrorMapper, SessionController y AuthRepository) integrado con develop."
     ],
-    "ultimo_resumen": "Implementado Google Sign-In en el cliente: dependencias aprobadas (google_sign_in 7.x, dio, flutter_secure_storage, mocktail); core/network (Dio con timeouts 5s/10s + ErrorMapper), core/storage (TokenStorage), core/session (SessionController); feature auth con AuthRepository, GoogleAuthDataSource (serverClientId = Web Client ID), AuthRemoteDataSource (POST /auth/google, sin reintentos) y AuthScope; botón de Google conectado en Login y Registro. Client IDs ya en .env. Contrato de respuesta ASUMIDO (access_token, refresh_token, user.{email,nombre,proveedor_auth}) pendiente de validar con OpenAPI (CoVE #4/#5, DPF-03). Aún no existe pantalla Home post-login ni refresh interceptor.",
+    "ultimo_resumen": "Unificada la rama auth con develop: integradas las vistas del shell principal (Home, History, Stats, Profile) junto con el flujo completo de Google Sign-In (core/network, core/storage, core/session, AuthRepository y pruebas unitarias/widgets).",
     "proximos_pasos_inmediatos": [
-      "1. Probar en Android con --dart-define-from-file=.env (requiere SHA-1 registrada en el cliente OAuth Android y backend con POST /auth/google).",
-      "2. Validar el JSON de respuesta real de /auth/google contra OpenAPI y ajustar AuthRemoteDataSource.",
-      "3. Navegar a Home al autenticarse (reaccionar a SessionController) y crear interceptor de refresh single-flight.",
-      "4. Conectar Login, Registro y Verificación por correo a los endpoints reales."
-    ]  }
+      "1. Probar Google Sign-In en Android con --dart-define-from-file=.env (con SHA-1 registrada y backend POST /api/v1/auth/google activo).",
+      "2. Validar el JSON de respuesta real de /auth/google contra OpenAPI y redirigir a /home al autenticarse.",
+      "3. Conectar Login local, Registro, Verificación por correo y endpoints de análisis/métricas al backend."
+    ]
+  }
 }
 

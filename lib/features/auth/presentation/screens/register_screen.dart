@@ -11,10 +11,8 @@ import '../widgets/auth_form_footer.dart';
 import '../widgets/auth_mode_tabs.dart';
 import '../widgets/auth_scaffold.dart';
 
-/// Pantalla de registro local con nombre, correo y contraseña (CU-13, RF-06.1).
-///
-/// PLANTILLA: todavía no hay backend. El envío solo valida el formulario,
-/// muestra el estado de carga y un aviso informativo.
+/// Pantalla de registro local con nombre, correo y contraseña (CU-13, RF-06.1)
+/// y autenticación con Google (RF-06.4).
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -73,39 +71,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
   }
 
-  Future<void> _submit() async {
-    if (_isSubmitting) return;
-    FocusScope.of(context).unfocus();
-
-    if (!(_formKey.currentState?.validate() ?? false)) {
-      setState(() {
-        _alertMessage = AppStrings.validationFormHasErrors;
-        _alertVariant = AlertVariant.warning;
-      });
-      return;
-    }
-
-    setState(() {
-      _isSubmitting = true;
-      _alertMessage = null;
-    });
-
-    // TODO(Etapa 2): POST /api/v1/auth/register {email, password, nombre}.
-    // - Éxito → SessionPendingVerification(email) → pantalla de verificación.
-    // - 409 → ConflictFailure (correo ya registrado).
-    // - Nunca reintentar automáticamente este POST (AGENTS.md §7).
-    await Future<void>.delayed(const Duration(milliseconds: 900));
-    if (!mounted) return;
-
-    setState(() {
-      _isSubmitting = false;
-      _alertMessage = AppStrings.templateBackendPending;
-      _alertVariant = AlertVariant.info;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    final hasGoogleAuth = AuthScope.maybeOf(context)?.repository != null;
+
     // Con "atrás" en Android se vuelve a Login en vez de cerrar la app.
     return PopScope(
       canPop: false,
@@ -181,19 +150,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   textInputAction: TextInputAction.done,
                   autofillHints: const [AutofillHints.newPassword],
                   validator: AuthValidators.newPassword,
-                  onFieldSubmitted: (_) => _submit(),
                 ),
                 const SizedBox(height: 22),
-                PrimaryButton(
+                const PrimaryButton(
                   label: AppStrings.registerSubmit,
-                  isLoading: _isSubmitting,
-                  onPressed: _submit,
+                  // Deshabilitado hasta conectar POST /api/v1/auth/register.
+                  onPressed: null,
                 ),
                 const SizedBox(height: 14),
                 const AuthPrivacyNote(),
                 AuthFormFooter(
-                  enabled: !_isSubmitting,
-                  onGooglePressed: _googleSignIn,
+                  enabled: hasGoogleAuth && !_isSubmitting,
+                  onGooglePressed: hasGoogleAuth ? _googleSignIn : null,
                 ),
               ],
             ),

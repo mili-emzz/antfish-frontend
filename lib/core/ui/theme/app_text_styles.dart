@@ -114,4 +114,30 @@ abstract final class AppTextStyles {
     letterSpacing: 1.8,
     color: AppColors.muted,
   );
+
+  /// Título principal de pantallas internas (.page-header > h1).
+  static const TextStyle pageHeaderTitle = TextStyle(
+    fontFamily: display,
+    fontSize: 33,
+    fontWeight: FontWeight.w700,
+    height: 1.12,
+    letterSpacing: -1.48,
+    color: AppColors.textLight,
+  );
+
+  /// Subtítulo descriptivo de pantallas internas (.page-header > p).
+  static const TextStyle pageHeaderCopy = TextStyle(
+    fontFamily: body,
+    fontSize: 12,
+    height: 1.5,
+    color: AppColors.muted,
+  );
+
+  /// Etiqueta de ítem en barra de navegación inferior (.bottom-nav span/small).
+  static const TextStyle bottomNavLabel = TextStyle(
+    fontFamily: body,
+    fontSize: 9,
+    fontWeight: FontWeight.w500,
+    height: 1.2,
+  );
 }

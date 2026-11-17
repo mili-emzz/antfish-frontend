@@ -51,50 +51,50 @@ void main() {
   });
 
   group('Flujo Google Sign-In en UI', () {
-    testWidgets('muestra carga, deshabilita botón y autentica sesión al éxito', (
-      tester,
-    ) async {
-      final completer = Completer<AuthSession?>();
-      when(
-        () => repository.signInWithGoogle(),
-      ).thenAnswer((_) => completer.future);
+    testWidgets(
+      'muestra carga, deshabilita botón y autentica sesión al éxito',
+      (tester) async {
+        final completer = Completer<AuthSession?>();
+        when(() => repository.signInWithGoogle())
+            .thenAnswer((_) => completer.future);
 
-      await tester.pumpWidget(
-        _wrapWithAuth(
-          repository: repository,
-          session: session,
-          child: const LoginScreen(),
-        ),
-      );
+        await tester.pumpWidget(
+          _wrapWithAuth(
+            repository: repository,
+            session: session,
+            child: const LoginScreen(),
+          ),
+        );
 
-      final googleBtn = find.text(AppStrings.authGoogle);
-      await tester.ensureVisible(googleBtn);
-      await tester.tap(googleBtn);
-      await tester.pump();
+        final googleBtn = find.text(AppStrings.authGoogle);
+        await tester.ensureVisible(googleBtn);
+        await tester.tap(googleBtn);
+        await tester.pump();
 
-      // Mientras está en curso, un segundo tap no debe disparar otra llamada.
-      await tester.tap(googleBtn, warnIfMissed: false);
-      await tester.pump();
-      verify(() => repository.signInWithGoogle()).called(1);
+        // Mientras está en curso, un segundo tap no debe disparar otra llamada.
+        await tester.tap(googleBtn, warnIfMissed: false);
+        await tester.pump();
+        verify(() => repository.signInWithGoogle()).called(1);
 
-      completer.complete(
-        const AuthSession(
-          accessToken: 'jwt_access',
-          refreshToken: 'jwt_refresh',
-          email: 'user@antfish.app',
-          proveedorAuth: 'google',
-        ),
-      );
-      await tester.pumpAndSettle();
+        completer.complete(
+          const AuthSession(
+            accessToken: 'jwt_access',
+            refreshToken: 'jwt_refresh',
+            email: 'user@antfish.app',
+            proveedorAuth: 'google',
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text(AppStrings.googleSignInSuccess), findsOneWidget);
-      expect(await storage.readRefreshToken(), 'jwt_refresh');
-      expect(session.state, isA<SessionAuthenticated>());
-      final authState = session.state as SessionAuthenticated;
-      expect(authState.accessToken, 'jwt_access');
-      expect(authState.userEmail, 'user@antfish.app');
-      expect(authState.authProvider, 'google');
-    });
+        expect(find.text(AppStrings.googleSignInSuccess), findsOneWidget);
+        expect(await storage.readRefreshToken(), 'jwt_refresh');
+        expect(session.state, isA<SessionAuthenticated>());
+        final authState = session.state as SessionAuthenticated;
+        expect(authState.accessToken, 'jwt_access');
+        expect(authState.userEmail, 'user@antfish.app');
+        expect(authState.authProvider, 'google');
+      },
+    );
 
     testWidgets('cancelar selector de Google no muestra alerta de error', (
       tester,
@@ -122,9 +122,8 @@ void main() {
     testWidgets('error 409 muestra aviso de correo no verificado en Registro', (
       tester,
     ) async {
-      when(
-        () => repository.signInWithGoogle(),
-      ).thenThrow(const ConflictFailure());
+      when(() => repository.signInWithGoogle())
+          .thenThrow(const ConflictFailure());
 
       await tester.pumpWidget(
         _wrapWithAuth(
@@ -146,9 +145,8 @@ void main() {
     testWidgets('error 401 muestra aviso de credencial inválida', (
       tester,
     ) async {
-      when(
-        () => repository.signInWithGoogle(),
-      ).thenThrow(const UnauthorizedFailure());
+      when(() => repository.signInWithGoogle())
+          .thenThrow(const UnauthorizedFailure());
 
       await tester.pumpWidget(
         _wrapWithAuth(

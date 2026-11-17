@@ -10,10 +10,7 @@ import '../widgets/auth_form_footer.dart';
 import '../widgets/auth_mode_tabs.dart';
 import '../widgets/auth_scaffold.dart';
 
-/// Pantalla de inicio de sesión local (CU-02).
-///
-/// PLANTILLA: todavía no hay backend. El envío solo valida el formulario,
-/// muestra el estado de carga y un aviso informativo.
+/// Pantalla de inicio de sesión local (CU-02) y con Google (RF-06.4).
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -68,38 +65,10 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  Future<void> _submit() async {
-    if (_isSubmitting) return;
-    FocusScope.of(context).unfocus();
-
-    if (!(_formKey.currentState?.validate() ?? false)) {
-      setState(() {
-        _alertMessage = AppStrings.validationFormHasErrors;
-        _alertVariant = AlertVariant.warning;
-      });
-      return;
-    }
-
-    setState(() {
-      _isSubmitting = true;
-      _alertMessage = null;
-    });
-
-    // TODO(Etapa 2): POST /api/v1/auth/login vía AuthRepository.
-    // - 403 ACCOUNT_NOT_VERIFIED → navegar a verificación de correo.
-    // - 401 / 429 → mostrar AppAlert con el mensaje de AppFailure.
-    await Future<void>.delayed(const Duration(milliseconds: 900));
-    if (!mounted) return;
-
-    setState(() {
-      _isSubmitting = false;
-      _alertMessage = AppStrings.templateBackendPending;
-      _alertVariant = AlertVariant.info;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    final hasGoogleAuth = AuthScope.maybeOf(context)?.repository != null;
+
     return AuthScaffold(
       mode: AuthMode.login,
       eyebrow: AppStrings.loginEyebrow,
@@ -150,32 +119,26 @@ class _LoginScreenState extends State<LoginScreen> {
                 textInputAction: TextInputAction.done,
                 autofillHints: const [AutofillHints.password],
                 validator: AuthValidators.loginPassword,
-                onFieldSubmitted: (_) => _submit(),
               ),
-              Align(
+              const Align(
                 alignment: Alignment.centerRight,
                 child: LinkButton(
                   label: AppStrings.loginForgotPassword,
-                  // TODO(Etapa 2): ruta /forgot-password (POST /auth/password/forgot).
-                  onPressed: _isSubmitting
-                      ? null
-                      : () => showAppSnackBar(
-                          context,
-                          AppStrings.templateComingSoon,
-                        ),
+                  // Deshabilitado hasta conectar POST /api/v1/auth/password/forgot.
+                  onPressed: null,
                 ),
               ),
               const SizedBox(height: 6),
-              PrimaryButton(
+              const PrimaryButton(
                 label: AppStrings.loginSubmit,
-                isLoading: _isSubmitting,
-                onPressed: _submit,
+                // Deshabilitado hasta conectar POST /api/v1/auth/login.
+                onPressed: null,
               ),
               const SizedBox(height: 14),
               const AuthPrivacyNote(),
               AuthFormFooter(
-                enabled: !_isSubmitting,
-                onGooglePressed: _googleSignIn,
+                enabled: hasGoogleAuth && !_isSubmitting,
+                onGooglePressed: hasGoogleAuth ? _googleSignIn : null,
               ),
             ],
           ),
