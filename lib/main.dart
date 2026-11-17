@@ -5,5 +5,12 @@ import 'features/auth/auth.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(AntFishApp(authRepository: createAuthRepository()));
+  runApp(
+    AntFishApp(
+      authRepositoryBuilder: (session, onUnauthorized) => createAuthRepository(
+        session: session,
+        onUnauthorized: onUnauthorized,
+      ),
+    ),
+  );
 }

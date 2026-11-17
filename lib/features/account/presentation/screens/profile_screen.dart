@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/session/session_scope.dart';
+import '../../../../core/session/session_state.dart';
 import '../../../../core/ui/theme/app_colors.dart';
 import '../../../../core/ui/theme/app_text_styles.dart';
 import '../../../../core/ui/widgets/glass_panel.dart';
@@ -19,16 +21,46 @@ class ProfileScreen extends StatelessWidget {
 
   final VoidCallback? onLogout;
 
-  void _handleLogout(BuildContext context) {
+  Future<void> _handleLogout(BuildContext context) async {
+    final navigator = Navigator.of(context);
+    await SessionScope.maybeOf(context)?.signOut();
     if (onLogout != null) {
       onLogout!();
       return;
     }
-    Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+    navigator.pushReplacementNamed(AppRoutes.login);
+  }
+
+  static String _initialsFor(String name) {
+    final parts = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((p) => p.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return AppStrings.homeAvatarInitials;
+    if (parts.length == 1) {
+      final first = parts.first;
+      return first.substring(0, first.length >= 2 ? 2 : 1).toUpperCase();
+    }
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
   }
 
   @override
   Widget build(BuildContext context) {
+    final sessionState = SessionScope.maybeOf(context)?.state;
+    final authState = sessionState is SessionAuthenticated
+        ? sessionState
+        : null;
+    final displayName = (authState?.userName?.trim().isNotEmpty ?? false)
+        ? authState!.userName!.trim()
+        : AppStrings.profileDemoName;
+    final displayEmail = (authState?.userEmail?.trim().isNotEmpty ?? false)
+        ? authState!.userEmail!.trim()
+        : AppStrings.profileDemoEmail;
+    final initials = (authState?.userName?.trim().isNotEmpty ?? false)
+        ? _initialsFor(displayName)
+        : AppStrings.homeAvatarInitials;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
@@ -56,10 +88,10 @@ class ProfileScreen extends StatelessWidget {
                     colors: [Color(0x29D7BA89), Color(0x1FB47EB3)],
                   ),
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
-                    AppStrings.homeAvatarInitials,
-                    style: TextStyle(
+                    initials,
+                    style: const TextStyle(
                       fontFamily: AppTextStyles.display,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -74,9 +106,9 @@ class ProfileScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      AppStrings.profileDemoName,
-                      style: TextStyle(
+                    Text(
+                      displayName,
+                      style: const TextStyle(
                         fontFamily: AppTextStyles.display,
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -84,9 +116,9 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 3),
-                    const Text(
-                      AppStrings.profileDemoEmail,
-                      style: TextStyle(
+                    Text(
+                      displayEmail,
+                      style: const TextStyle(
                         fontFamily: AppTextStyles.body,
                         fontSize: 10,
                         color: Color(0xFF8B7F8F),
