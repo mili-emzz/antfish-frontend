@@ -4,7 +4,7 @@
     "nombre_proyecto": "AntFish Frontend",
     "version": "1.0.0",
     "fecha_creacion": "2026-11-02",
-    "ultima_actualizacion": "2026-11-03",
+    "ultima_actualizacion": "2026-11-16",
     "estado_proyecto": "Fase de UI Plantilla y Arquitectura Base",
     "repositorio": "antfish_frontend",
     "fuentes_de_verdad": [
@@ -55,6 +55,7 @@
         "main.dart": "Punto de entrada y configuración de ProviderScope",
         "app.dart": "MaterialApp.router, temas y configuración l10n",
         "core/": {
+          "config/": "Lectura segura de variables de entorno inyectadas con --dart-define-from-file=.env (EnvConfig)",
           "network/": "Instancia de Dio, AuthInterceptor, RefreshInterceptor, ErrorMapper",
           "session/": "SessionController (unknown, unauthenticated, pendingVerification, authenticated)",
           "storage/": "Wrapper sobre FlutterSecureStorage",
@@ -158,6 +159,12 @@
       "tema": "Internacionalización y convenciones de código",
       "decision": "Código Dart e identificadores en inglés; textos visibles al usuario estrictamente en español centralizados en l10n/ (sin textos hardcodeados).",
       "razon": "Mantenibilidad profesional y consistencia con las reglas de negocio."
+    },
+    {
+      "id": "DT-12",
+      "tema": "Gestión de Client IDs de OAuth y variables de entorno (.env)",
+      "decision": "Almacenar todos los identificadores de cliente OAuth (GOOGLE_WEB_CLIENT_ID, GOOGLE_ANDROID_CLIENT_ID) y API_BASE_URL exclusivamente en .env (excluido en .gitignore), inyectándolos mediante --dart-define-from-file=.env y leyéndolos con String.fromEnvironment en lib/core/config/env_config.dart.",
+      "razon": "Evita hardcodear credenciales en el repositorio y evita incluir .env como asset público dentro del APK/IPA."
     }
   ],
   "decisiones_pendientes_a_ratificar": [
@@ -254,15 +261,15 @@
   "ultimo_resumen_y_proximos_pasos": {
     "decisiones_tecnicas_tomadas": [
       "DT-10: Regla mandatoria del sistema (.agents/rules/sync_resumen_proyecto.md) y DoD en AGENTS.md para sincronizar docs/resumen_proyecto.json al finalizar cada tarea o cambio.",
-      "DT-11: Implementación de plantilla UI pura de autenticación (Login y Registro) en Flutter Feature-First bajo estética Dark Crystal Cyber-Shield, responsive adaptativo (>800px dos columnas con visual hero narrativo; <=800px una columna; <=520px compacto), validadores puros y alertas sin dependencias externas bloqueantes."
+      "DT-11: Implementación de plantilla UI pura de autenticación (Login y Registro) en Flutter Feature-First bajo estética Dark Crystal Cyber-Shield, responsive adaptativo (>800px dos columnas con visual hero narrativo; <=800px una columna; <=520px compacto), validadores puros y alertas sin dependencias externas bloqueantes.",
+      "DT-12: Regla mandatoria (.agents/rules/env_credentials.md) y actualización en AGENTS.md y .gitignore para que todos los Client IDs de OAuth y configuraciones residan en .env e inyecten vía --dart-define-from-file=.env hacia EnvConfig."
     ],
-    "ultimo_resumen": "Etapa 1 completada: Login y Registro (plantilla UI responsive). Añadida VerifyEmailScreen (CU-14, RF-06.2) como plantilla SIN lógica: OtpCodeInput de 6 casillas, vigencia de 10 min solo informativa (sin cuenta regresiva), 'Reenviar código' deshabilitado y 'Verificar' solo valida formato (6 dígitos) y muestra aviso. Ruta /verify-email accesible con --dart-define=INITIAL_ROUTE=/verify-email. 'flutter analyze' limpio y 'flutter test' con 32 pruebas pasando.",
+    "ultimo_resumen": "Implementado Google Sign-In en el cliente: dependencias aprobadas (google_sign_in 7.x, dio, flutter_secure_storage, mocktail); core/network (Dio con timeouts 5s/10s + ErrorMapper), core/storage (TokenStorage), core/session (SessionController); feature auth con AuthRepository, GoogleAuthDataSource (serverClientId = Web Client ID), AuthRemoteDataSource (POST /auth/google, sin reintentos) y AuthScope; botón de Google conectado en Login y Registro. Client IDs ya en .env. Contrato de respuesta ASUMIDO (access_token, refresh_token, user.{email,nombre,proveedor_auth}) pendiente de validar con OpenAPI (CoVE #4/#5, DPF-03). Aún no existe pantalla Home post-login ni refresh interceptor.",
     "proximos_pasos_inmediatos": [
-      "1. Ratificar formalmente el gestor de estado (Riverpod vs Bloc - DPF-01) y aprobar dependencias en pubspec.yaml (DPF-02).",
-      "2. Instalar dio y flutter_secure_storage para implementar interceptores de red y refresco de tokens (core/network y core/storage).",
-      "3. Configurar internacionalización en lib/l10n/ (AppLocalizations en español).",
-      "4. Conectar Login, Registro y Verificación a los endpoints reales cuando exista backend. Al conectar VerifyEmailScreen: POST /auth/verify-email, temporizador de 600 s, POST /auth/resend-code (máx. 3/hora, HTTP 429), tope de 5 intentos y navegación desde el registro con el correo (SessionPendingVerification)."
-    ]
-  }
+      "1. Probar en Android con --dart-define-from-file=.env (requiere SHA-1 registrada en el cliente OAuth Android y backend con POST /auth/google).",
+      "2. Validar el JSON de respuesta real de /auth/google contra OpenAPI y ajustar AuthRemoteDataSource.",
+      "3. Navegar a Home al autenticarse (reaccionar a SessionController) y crear interceptor de refresh single-flight.",
+      "4. Conectar Login, Registro y Verificación por correo a los endpoints reales."
+    ]  }
 }
 

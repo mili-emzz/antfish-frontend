@@ -23,7 +23,7 @@ AntFish es una aplicación móvil (Android e iOS) para el análisis de SMS y URL
 ## 2. Comandos
 
 ```bash
-flutter run                                           # Ejecutar la app en emulador o dispositivo
+flutter run --dart-define-from-file=.env              # Ejecutar la app inyectando variables desde .env
 flutter analyze                                       # Análisis estático de Dart
 dart format --output=none --set-exit-if-changed .     # Verificación de formato de código
 dart format .                                         # Formatear código
@@ -139,6 +139,7 @@ El cliente **no inventa endpoints ni campos**. Toda pantalla debe responder a un
 * **Logs limpios:** No imprimir en consola (`print` o `debugPrint`) ni registrar en logs bodies de peticiones, tokens JWT, contraseñas, códigos de verificación ni ID tokens de Google.
 * **Almacenamiento local restringido:** Solo los tokens de autenticación se almacenan en `flutter_secure_storage`. Nunca guardar credenciales ni datos sensibles en `SharedPreferences`.
 * **ID Token de Google:** Se obtiene a través de `google_sign_in`, se envía inmediatamente al backend (`POST /api/v1/auth/google`) y se descarta de la memoria del cliente.
+* **Variables de Entorno y Credenciales (`.env`):** Todos los Client IDs de OAuth (`GOOGLE_WEB_CLIENT_ID`, `GOOGLE_ANDROID_CLIENT_ID`), URLs base (`API_BASE_URL`) y secretos de configuración van exclusivamente en `.env` (ignorado en `.gitignore`) y nunca hardcodeados en Dart. Se inyectan mediante `--dart-define-from-file=.env` (`String.fromEnvironment`) sin incluir `.env` como asset en `pubspec.yaml`. Se mantiene `.env.example` como plantilla limpia en el repositorio.
 
 ---
 

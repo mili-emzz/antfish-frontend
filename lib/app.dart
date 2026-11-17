@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'core/router/app_routes.dart';
+import 'core/session/session_controller.dart';
+import 'core/storage/token_storage.dart';
 import 'core/ui/theme/app_theme.dart';
 import 'features/auth/auth.dart';
 
@@ -8,8 +10,20 @@ import 'features/auth/auth.dart';
 ///
 /// Navegación provisional con rutas nombradas hasta integrar `go_router`
 /// con guards de sesión (DPF-02).
-class AntFishApp extends StatelessWidget {
-  const AntFishApp({super.key});
+class AntFishApp extends StatefulWidget {
+  const AntFishApp({super.key, this.authRepository});
+
+  /// Repositorio de autenticación; si es null, Google Sign-In queda inactivo.
+  final AuthRepository? authRepository;
+
+  @override
+  State<AntFishApp> createState() => _AntFishAppState();
+}
+
+class _AntFishAppState extends State<AntFishApp> {
+  late final SessionController _session = SessionController(
+    SecureTokenStorage(),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +38,11 @@ class AntFishApp extends StatelessWidget {
         defaultValue: AppRoutes.login,
       ),
       onGenerateRoute: _onGenerateRoute,
+      builder: (context, child) => AuthScope(
+        repository: widget.authRepository,
+        session: _session,
+        child: child ?? const SizedBox.shrink(),
+      ),
     );
   }
 

@@ -95,6 +95,20 @@ abstract final class AppStrings {
   static const String authPrivacyNote =
       'Tus datos viajan cifrados. Nunca compartimos tu información.';
 
+  // Google Sign-In
+  static const String googleSignInSuccess =
+      'Sesión iniciada con Google correctamente.';
+  static const String googleEmailNotVerified =
+      'Google indica que ese correo no está verificado. Usa otra cuenta.';
+  static const String googleInvalidCredential =
+      'No se pudo validar tu cuenta de Google. Inténtalo de nuevo.';
+  static const String googleNoCredential =
+      'No se pudo obtener la credencial de Google.';
+  static const String googleGenericError =
+      'No se pudo iniciar sesión con Google. Inténtalo de nuevo.';
+  static const String serverInvalidResponse =
+      'Respuesta inesperada del servidor.';
+
   // Estados de plantilla (sin backend)
   static const String templateBackendPending =
       'Vista de plantilla: la conexión con el servidor aún no está disponible.';

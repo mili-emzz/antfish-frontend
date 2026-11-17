@@ -30,10 +30,17 @@ class AuthPrivacyNote extends StatelessWidget {
 
 /// Pie común de Login y Registro: separador, Google y aviso legal.
 class AuthFormFooter extends StatelessWidget {
-  const AuthFormFooter({super.key, required this.enabled});
+  const AuthFormFooter({
+    super.key,
+    required this.enabled,
+    this.onGooglePressed,
+  });
 
   /// Se deshabilita mientras hay un envío en curso.
   final bool enabled;
+
+  /// Acción del botón de Google; si es null muestra "próximamente".
+  final VoidCallback? onGooglePressed;
 
   void _comingSoon(BuildContext context) =>
       showAppSnackBar(context, AppStrings.templateComingSoon);
@@ -60,8 +67,9 @@ class AuthFormFooter extends StatelessWidget {
         const SizedBox(height: 20),
         SecondaryButton(
           label: AppStrings.authGoogle,
-          // TODO(Etapa 2): google_sign_in → POST /api/v1/auth/google (RF-06.4).
-          onPressed: enabled ? () => _comingSoon(context) : null,
+          onPressed: enabled
+              ? (onGooglePressed ?? () => _comingSoon(context))
+              : null,
           leading: const _GoogleGlyph(),
         ),
         const SizedBox(height: 12),

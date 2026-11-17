@@ -4,6 +4,7 @@ import '../../../../core/ui/widgets/app_alert.dart';
 import '../../../../core/ui/widgets/app_buttons.dart';
 import '../../../../core/ui/widgets/crystal_text_field.dart';
 import '../../../../l10n/app_strings.dart';
+import '../auth_scope.dart';
 import '../validators/auth_validators.dart';
 import '../widgets/auth_form_footer.dart';
 import '../widgets/auth_mode_tabs.dart';
@@ -36,6 +37,35 @@ class _LoginScreenState extends State<LoginScreen> {
     _passwordController.dispose();
     _passwordFocus.dispose();
     super.dispose();
+  }
+
+  Future<void> _googleSignIn() async {
+    if (_isSubmitting) return;
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _isSubmitting = true;
+      _alertMessage = null;
+    });
+
+    final result = await runGoogleSignIn(context);
+    if (!mounted) return;
+
+    setState(() {
+      _isSubmitting = false;
+      switch (result) {
+        case GoogleSignInSuccess():
+          _alertMessage = AppStrings.googleSignInSuccess;
+          _alertVariant = AlertVariant.success;
+        case GoogleSignInCancelled():
+          break;
+        case GoogleSignInUnavailable():
+          _alertMessage = AppStrings.templateBackendPending;
+          _alertVariant = AlertVariant.info;
+        case GoogleSignInError(:final message):
+          _alertMessage = message;
+          _alertVariant = AlertVariant.error;
+      }
+    });
   }
 
   Future<void> _submit() async {
@@ -143,7 +173,10 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 14),
               const AuthPrivacyNote(),
-              AuthFormFooter(enabled: !_isSubmitting),
+              AuthFormFooter(
+                enabled: !_isSubmitting,
+                onGooglePressed: _googleSignIn,
+              ),
             ],
           ),
         ),

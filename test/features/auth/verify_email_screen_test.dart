@@ -121,4 +121,3 @@ void main() {
     expect(find.textContaining('a@b.com'), findsOneWidget);
   });
 }
-
