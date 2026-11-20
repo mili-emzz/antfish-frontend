@@ -196,6 +196,54 @@ abstract final class AppStrings {
       'Detectamos una posible suplantación de identidad y reputación negativa.';
   static const String resultFindingDeceptiveDomain = 'Dominio engañoso';
   static const String resultFindingBlacklist = 'Lista negra';
+  static const String resultSafeTitle = 'No se detectaron amenazas críticas';
+  static const String resultSafeCopy =
+      'Las señales analizadas no muestran indicios claros de fraude.';
+  static const String resultMediumTitle = 'Procede con precaución';
+  static const String resultMediumCopy =
+      'Se detectaron algunas señales inusuales. Verifica la fuente antes de continuar.';
+  static const String resultHighTitle = 'Riesgo alto detectado';
+  static const String resultHighCopy =
+      'Recomendamos no abrir este enlace ni compartir datos personales.';
+  static const String resultPartialWarning =
+      'Análisis preliminar: alguna fuente externa no respondió a tiempo.';
+  static const String resultShortCircuitBlacklist = 'Detectado en lista negra';
+  static const String resultShortCircuitImpersonation =
+      'Posible suplantación de marca';
+  static const String resultLayerApis = 'APIs';
+  static const String resultLayerUrl = 'URL';
+  static const String resultLayerText = 'Texto';
+  static const String resultViewDetail = 'Ver detalle completo';
+  static const String analysisSubmitError =
+      'No se pudo completar el análisis. Inténtalo de nuevo.';
+  static const String analysisUrlTooLong =
+      'La URL supera el límite máximo de 2,048 caracteres.';
+  static const String analysisSmsTooLong =
+      'El mensaje SMS supera el límite máximo de 1,600 caracteres.';
+  static const String analysisDetailTitle = 'Detalle del análisis';
+  static const String analysisDetailLayersTitle = 'Puntaje por capa';
+  static const String analysisDetailPrimaryUrl = 'URL principal';
+  static const String analysisDetailSecondaryUrl =
+      'URL secundaria (solo señales sintácticas)';
+  static const String analysisDetailFindingsTitle = 'Hallazgos detectados';
+  static const String analysisDetailRecommendationsTitle = 'Recomendaciones';
+  static const String analysisDetailSourcesTitle = 'Fuentes consultadas';
+  static const String analysisDetailClose = 'Cerrar';
+  static const String analysisDetailDelete = 'Eliminar del historial';
+  static const String analysisDeleteConfirmTitle = 'Eliminar análisis';
+  static const String analysisDeleteConfirmCopy =
+      'Se eliminará este registro de tu historial. Los contadores históricos de métricas no se reducirán.';
+  static const String analysisDeleteSuccess =
+      'Análisis eliminado del historial.';
+  static const String analysisDeleteError =
+      'No se pudo eliminar el análisis. Inténtalo de nuevo.';
+  static const String historyLoading = 'Cargando historial...';
+  static const String historyLoadError =
+      'No se pudo cargar tu historial. Inténtalo de nuevo.';
+  static const String historyEmpty =
+      'Aún no tienes análisis registrados en tu historial.';
+  static const String historyLoadMore = 'Cargar más';
+  static String homeGreetingFor(String firstName) => 'Hola, $firstName';
 
   // Actividad reciente e historial (App.tsx)
   static const String recentEyebrow = 'ACTIVIDAD';

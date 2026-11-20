@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/session/session_scope.dart';
+import '../../../../core/session/session_state.dart';
 import '../../../../core/ui/layout/breakpoints.dart';
 import '../../../../core/ui/theme/app_colors.dart';
 import '../../../../core/ui/theme/app_text_styles.dart';
+import '../../../../core/ui/widgets/app_alert.dart';
 import '../../../../core/ui/widgets/brand_mark.dart';
+import '../../../../core/ui/widgets/glass_panel.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../domain/models/analysis_result.dart';
+import '../analysis_scope.dart';
+import '../widgets/analysis_detail_dialog.dart';
 import '../widgets/history_row_item.dart';
 import '../widgets/risk_traffic_light_card.dart';
 import '../widgets/scanner_card.dart';
 
 /// Pantalla principal de escaneo (`HomeScreen` en App.tsx).
 ///
-/// PLANTILLA SIN BACKEND:
-/// - Permite interactuar con el selector URL/SMS y el campo de texto.
-/// - El botón de envío a `POST /api/v1/analysis` permanece deshabilitado hasta
-///   que el backend esté disponible.
-/// - Admite [initialShowResult] para previsualizar y verificar [ResultCard]
-///   o alternar con [RiskTrafficLightCard].
+/// Cuando existe [AnalysisScope] con repositorio conectado:
+/// - Envía URLs y mensajes SMS a `POST /api/v1/analysis`.
+/// - Muestra el resultado real en [ResultCard.fromAnalysis] sin recalcular score.
+/// - Carga y muestra los análisis recientes desde `GET /api/v1/analysis`.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
@@ -34,20 +39,98 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late bool _showResult = widget.initialShowResult;
+  late bool _showPreviewResult = widget.initialShowResult;
+  bool _requestedInitialHistory = false;
 
   @override
   void didUpdateWidget(covariant HomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initialShowResult != widget.initialShowResult) {
-      _showResult = widget.initialShowResult;
+      _showPreviewResult = widget.initialShowResult;
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_requestedInitialHistory) return;
+    final controller = AnalysisScope.maybeOf(context);
+    if (controller != null && controller.hasBackend) {
+      _requestedInitialHistory = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) controller.loadHistory();
+      });
+    }
+  }
+
+  Future<void> _openDetail(
+    BuildContext context,
+    AnalysisController controller,
+    AnalysisResult item,
+  ) async {
+    final detailed = await controller.fetchDetail(item.id) ?? item;
+    if (!context.mounted) return;
+    final deleted = await showDialog<bool>(
+      context: context,
+      builder: (_) => AnalysisDetailDialog(
+        result: detailed,
+        onDelete: () => controller.deleteHistoryItem(detailed.id),
+      ),
+    );
+    if (deleted == true && context.mounted) {
+      showAppSnackBar(context, AppStrings.analysisDeleteSuccess);
+    }
+  }
+
+  static String _initialsFor(String name) {
+    final parts = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((p) => p.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return AppStrings.homeAvatarInitials;
+    if (parts.length == 1) {
+      final first = parts.first;
+      return first.substring(0, first.length >= 2 ? 2 : 1).toUpperCase();
+    }
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+  }
+
+  static String _firstNameFor(String name) {
+    final parts = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((p) => p.isNotEmpty)
+        .toList();
+    return parts.isEmpty ? '' : parts.first;
   }
 
   @override
   Widget build(BuildContext context) {
     final bool isCompact = ScreenSize.of(context).isCompact;
     final double titleFontSize = isCompact ? 27 : 36;
+
+    final sessionState = SessionScope.maybeOf(context)?.state;
+    final authState = sessionState is SessionAuthenticated
+        ? sessionState
+        : null;
+    final userName = authState?.userName?.trim() ?? '';
+    final greeting = userName.isNotEmpty
+        ? AppStrings.homeGreetingFor(_firstNameFor(userName))
+        : AppStrings.homeGreeting;
+    final initials = userName.isNotEmpty
+        ? _initialsFor(userName)
+        : AppStrings.homeAvatarInitials;
+
+    final controller = AnalysisScope.maybeOf(context);
+    final hasBackend = controller?.hasBackend ?? false;
+    final isAnalyzing = controller?.isAnalyzing ?? false;
+    final analyzeError = controller?.analyzeError;
+    final latestResult = controller?.latestResult;
+
+    final List<ScanHistoryItem> recentItems = hasBackend
+        ? controller!.history.take(3).map(ScanHistoryItem.fromAnalysis).toList()
+        : demoScanHistory.take(3).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -58,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Flexible(child: BrandMark(compact: true)),
-            _AvatarButton(onTap: widget.onOpenProfile),
+            _AvatarButton(initials: initials, onTap: widget.onOpenProfile),
           ],
         ),
         SizedBox(height: isCompact ? 31 : 38),
@@ -71,9 +154,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    AppStrings.homeGreeting,
-                    style: TextStyle(
+                  Text(
+                    greeting,
+                    style: const TextStyle(
                       fontFamily: AppTextStyles.body,
                       fontSize: 13,
                       color: AppColors.muted,
@@ -111,17 +194,45 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         SizedBox(height: isCompact ? 23 : 30),
+        if (analyzeError != null) ...[
+          AppAlert(
+            message: analyzeError,
+            variant: AlertVariant.error,
+            onDismiss: () => controller?.dismissAnalyzeError(),
+          ),
+          const SizedBox(height: 14),
+        ],
         // .scanner-card
         ScannerCard(
+          isSubmitting: isAnalyzing,
           onInputTypeChanged: (_) {
-            if (_showResult) setState(() => _showResult = false);
+            if (_showPreviewResult) setState(() => _showPreviewResult = false);
+            controller?.dismissLatestResult();
           },
+          onAnalyzeSubmit: hasBackend
+              ? (type, content) {
+                  controller!.submitAnalysis(
+                    tipoEntrada: type.apiValue,
+                    contenido: content,
+                  );
+                }
+              : null,
         ),
         const SizedBox(height: 18),
         // .traffic-card o .result-card
-        _showResult
-            ? ResultCard(onDismiss: () => setState(() => _showResult = false))
-            : const RiskTrafficLightCard(),
+        if (latestResult != null)
+          ResultCard.fromAnalysis(
+            latestResult,
+            onDismiss: () => controller?.dismissLatestResult(),
+            onViewDetails: () =>
+                _openDetail(context, controller!, latestResult),
+          )
+        else if (_showPreviewResult)
+          ResultCard(
+            onDismiss: () => setState(() => _showPreviewResult = false),
+          )
+        else
+          const RiskTrafficLightCard(),
         const SizedBox(height: 35),
         // .recent-section
         Row(
@@ -183,18 +294,36 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         const SizedBox(height: 18),
-        HistoryListCard(
-          items: demoScanHistory.take(3).toList(),
-          compactList: true,
-        ),
+        if (hasBackend && recentItems.isEmpty)
+          const GlassPanel(
+            borderRadius: 21,
+            padding: EdgeInsets.all(20),
+            child: Text(
+              AppStrings.historyEmpty,
+              style: AppTextStyles.bodyMuted,
+            ),
+          )
+        else
+          HistoryListCard(
+            items: recentItems,
+            compactList: true,
+            onItemTap: hasBackend
+                ? (item) {
+                    if (item.analysis != null) {
+                      _openDetail(context, controller!, item.analysis!);
+                    }
+                  }
+                : null,
+          ),
       ],
     );
   }
 }
 
 class _AvatarButton extends StatelessWidget {
-  const _AvatarButton({this.onTap});
+  const _AvatarButton({required this.initials, this.onTap});
 
+  final String initials;
   final VoidCallback? onTap;
 
   @override
@@ -222,10 +351,10 @@ class _AvatarButton extends StatelessWidget {
                       colors: [Color(0x26D7BA89), Color(0x1FB47EB3)],
                     ),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
-                      AppStrings.homeAvatarInitials,
-                      style: TextStyle(
+                      initials,
+                      style: const TextStyle(
                         fontFamily: AppTextStyles.body,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,

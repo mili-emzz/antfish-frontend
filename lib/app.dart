@@ -26,6 +26,13 @@ typedef MetricsRepositoryBuilder = MetricsRepository Function(
   VoidCallback onUnauthorized,
 );
 
+/// Constructor diferido para crear [AnalysisRepository] conectado al
+/// [SessionController] de la aplicación.
+typedef AnalysisRepositoryBuilder = AnalysisRepository Function(
+  SessionController session,
+  VoidCallback onUnauthorized,
+);
+
 /// Punto de entrada del widget raíz de AntFish.
 ///
 /// Navegación provisional con rutas nombradas hasta integrar `go_router`
@@ -38,6 +45,8 @@ class AntFishApp extends StatefulWidget {
     this.authRepositoryBuilder,
     this.metricsRepository,
     this.metricsRepositoryBuilder,
+    this.analysisRepository,
+    this.analysisRepositoryBuilder,
     this.sessionController,
   });
 
@@ -58,6 +67,12 @@ class AntFishApp extends StatefulWidget {
   /// Fábrica opcional que construye [MetricsRepository] conectado a la sesión.
   final MetricsRepositoryBuilder? metricsRepositoryBuilder;
 
+  /// Repositorio de análisis directo (pruebas).
+  final AnalysisRepository? analysisRepository;
+
+  /// Fábrica opcional que construye [AnalysisRepository] conectado a la sesión.
+  final AnalysisRepositoryBuilder? analysisRepositoryBuilder;
+
   /// Controlador de sesión opcional (permite inyectarlo en pruebas).
   final SessionController? sessionController;
 
@@ -77,14 +92,22 @@ class _AntFishAppState extends State<AntFishApp> {
         widget.metricsRepository ??
         widget.metricsRepositoryBuilder?.call(_session, _handleUnauthorized),
   );
+  late final AnalysisController _analysisController = AnalysisController(
+    repository:
+        widget.analysisRepository ??
+        widget.analysisRepositoryBuilder?.call(_session, _handleUnauthorized),
+    onAnalysisCompleted: () => _metricsController.refresh(),
+  );
 
   @override
   void dispose() {
+    _analysisController.dispose();
     _metricsController.dispose();
     super.dispose();
   }
 
   void _handleUnauthorized() {
+    _analysisController.reset();
     _metricsController.reset();
     _navigatorKey.currentState?.pushNamedAndRemoveUntil(
       AppRoutes.login,
@@ -115,7 +138,10 @@ class _AntFishAppState extends State<AntFishApp> {
           session: _session,
           child: MetricsScope(
             controller: _metricsController,
-            child: child ?? const SizedBox.shrink(),
+            child: AnalysisScope(
+              controller: _analysisController,
+              child: child ?? const SizedBox.shrink(),
+            ),
           ),
         ),
       ),

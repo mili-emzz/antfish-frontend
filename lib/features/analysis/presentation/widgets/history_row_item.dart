@@ -4,9 +4,10 @@ import '../../../../core/ui/layout/breakpoints.dart';
 import '../../../../core/ui/theme/app_colors.dart';
 import '../../../../core/ui/theme/app_text_styles.dart';
 import '../../../../core/ui/widgets/risk_badge.dart';
+import '../../domain/models/analysis_result.dart';
 import 'scanner_card.dart';
 
-/// Elemento de demostración del historial (`scanHistory` en App.tsx).
+/// Elemento del historial de análisis (`HistoryRow` en App.tsx).
 @immutable
 class ScanHistoryItem {
   const ScanHistoryItem({
@@ -16,8 +17,35 @@ class ScanHistoryItem {
     required this.risk,
     required this.score,
     required this.level,
+    this.analysisId,
+    this.analysis,
   });
 
+  /// Convierte un [AnalysisResult] real del backend en un elemento de fila.
+  factory ScanHistoryItem.fromAnalysis(AnalysisResult result) {
+    final local = result.fechaAnalisis.toLocal();
+    final day = local.day.toString().padLeft(2, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    final hour = local.hour.toString().padLeft(2, '0');
+    final minute = local.minute.toString().padLeft(2, '0');
+    final formattedTime = '$day/$month · $hour:$minute';
+
+    return ScanHistoryItem(
+      analysisId: result.id,
+      analysis: result,
+      type: result.tipoEntrada == 'sms'
+          ? AnalysisInputType.sms
+          : AnalysisInputType.url,
+      value: result.displayTarget,
+      time: formattedTime,
+      risk: result.nivelRiesgo.label,
+      score: result.scoreTotal,
+      level: result.nivelRiesgo,
+    );
+  }
+
+  final String? analysisId;
+  final AnalysisResult? analysis;
   final AnalysisInputType type;
   final String value;
   final String time;
