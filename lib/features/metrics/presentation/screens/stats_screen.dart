@@ -241,8 +241,9 @@ class _StatsScreenState extends State<StatsScreen> {
                       ),
                     ],
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
                     children: [
                       Text(
                         periodLabel,
@@ -252,8 +253,7 @@ class _StatsScreenState extends State<StatsScreen> {
                           color: Color(0xFF756B79),
                         ),
                       ),
-                      if (hasBackend) ...[
-                        const SizedBox(width: 8),
+                      if (hasBackend)
                         Semantics(
                           button: true,
                           label: AppStrings.statsRefresh,
@@ -272,7 +272,6 @@ class _StatsScreenState extends State<StatsScreen> {
                             ),
                           ),
                         ),
-                      ],
                     ],
                   ),
                 ],
