@@ -46,6 +46,14 @@ final class ConflictFailure extends AppFailure {
   });
 }
 
+/// Recurso no encontrado (HTTP 404).
+final class NotFoundFailure extends AppFailure {
+  const NotFoundFailure({
+    super.message = 'El recurso solicitado no fue encontrado.',
+    super.code = 'NOT_FOUND',
+  });
+}
+
 /// Datos enviados rechazados por el backend (HTTP 400 / 422).
 final class ValidationFailure extends AppFailure {
   const ValidationFailure({

@@ -38,6 +38,10 @@ abstract final class ErrorMapper {
         message: detail ?? 'Credenciales inválidas o sesión expirada.',
         code: code ?? 'UNAUTHORIZED',
       ),
+      404 => NotFoundFailure(
+        message: detail ?? 'El recurso solicitado no fue encontrado.',
+        code: code ?? 'NOT_FOUND',
+      ),
       409 => ConflictFailure(
         message: detail ?? 'El correo electrónico ya se encuentra registrado.',
         code: code ?? 'CONFLICT',
@@ -79,7 +83,7 @@ abstract final class ErrorMapper {
     return null;
   }
 
-  /// Extrae `detail` cuando es un mensaje de texto legible para el usuario.
+  /// Extrae `detail` cuando es un mensaje de texto o lista de errores de FastAPI.
   static String? extractDetailMessage(Object? data) {
     if (data is! Map) return null;
     final detail = data['detail'];
@@ -87,6 +91,15 @@ abstract final class ErrorMapper {
         detail.trim().isNotEmpty &&
         detail != accountNotVerifiedCode) {
       return detail.trim();
+    }
+    if (detail is List && detail.isNotEmpty) {
+      final first = detail.first;
+      if (first is Map && first['msg'] is String) {
+        final msg = (first['msg'] as String).trim();
+        if (msg.isNotEmpty) return msg;
+      } else if (first is String && first.trim().isNotEmpty) {
+        return first.trim();
+      }
     }
     return null;
   }
