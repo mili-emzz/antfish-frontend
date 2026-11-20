@@ -36,9 +36,9 @@ class RiskTrafficLightCard extends StatelessWidget {
                   AppStrings.trafficLightEyebrow,
                   style: TextStyle(
                     fontFamily: AppTextStyles.body,
-                    fontSize: 8,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: 1.6,
+                    letterSpacing: 1.4,
                     color: AppColors.gold,
                   ),
                 ),
@@ -47,7 +47,7 @@ class RiskTrafficLightCard extends StatelessWidget {
                   AppStrings.trafficLightTitle,
                   style: TextStyle(
                     fontFamily: AppTextStyles.body,
-                    fontSize: 13,
+                    fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textLight,
                   ),
@@ -57,9 +57,9 @@ class RiskTrafficLightCard extends StatelessWidget {
                   AppStrings.trafficLightCopy,
                   style: TextStyle(
                     fontFamily: AppTextStyles.body,
-                    fontSize: 10,
-                    height: 1.45,
-                    color: Color(0xFF887D8C),
+                    fontSize: 13,
+                    height: 1.5,
+                    color: AppColors.muted,
                   ),
                 ),
               ],
@@ -238,11 +238,281 @@ class ResultCard extends StatelessWidget {
         : findings;
     final shortCircuitText = _shortCircuitLabel;
 
+    final Widget scoreBlock = Container(
+      constraints: BoxConstraints(minWidth: isCompact ? 0 : 118),
+      padding: EdgeInsets.only(
+        right: isCompact ? 0 : 16,
+        bottom: isCompact ? 12 : 0,
+      ),
+      decoration: BoxDecoration(
+        border: isCompact
+            ? const Border(bottom: BorderSide(color: Color(0x17FFFFFF)))
+            : const Border(right: BorderSide(color: Color(0x17FFFFFF))),
+      ),
+      child: isCompact
+          ? Wrap(
+              spacing: 12,
+              runSpacing: 6,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: '$score',
+                        style: TextStyle(
+                          fontFamily: AppTextStyles.display,
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          color: accent,
+                        ),
+                      ),
+                      const TextSpan(
+                        text: '/100',
+                        style: TextStyle(
+                          fontFamily: AppTextStyles.body,
+                          fontSize: 13,
+                          color: AppColors.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(level.icon, size: 15, color: accent),
+                    const SizedBox(width: 5),
+                    Text(
+                      level.label.toUpperCase(),
+                      style: TextStyle(
+                        fontFamily: AppTextStyles.body,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.6,
+                        color: accent,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            )
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: '$score',
+                        style: TextStyle(
+                          fontFamily: AppTextStyles.display,
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          color: accent,
+                        ),
+                      ),
+                      const TextSpan(
+                        text: '/100',
+                        style: TextStyle(
+                          fontFamily: AppTextStyles.body,
+                          fontSize: 13,
+                          color: AppColors.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(level.icon, size: 14, color: accent),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        level.label.toUpperCase(),
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: AppTextStyles.body,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.6,
+                          color: accent,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+    );
+
+    final Widget detailsColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          AppStrings.resultEyebrow,
+          style: TextStyle(
+            fontFamily: AppTextStyles.body,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.4,
+            color: AppColors.gold,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          title,
+          style: const TextStyle(
+            fontFamily: AppTextStyles.body,
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textLight,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          copy,
+          style: const TextStyle(
+            fontFamily: AppTextStyles.body,
+            fontSize: 13,
+            height: 1.5,
+            color: AppColors.muted,
+          ),
+        ),
+        if (shortCircuitText != null) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+            decoration: BoxDecoration(
+              color: AppColors.riskCritical.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                color: AppColors.riskCritical.withValues(alpha: 0.35),
+              ),
+            ),
+            child: Text(
+              shortCircuitText,
+              style: const TextStyle(
+                fontFamily: AppTextStyles.body,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: AppColors.riskCritical,
+              ),
+            ),
+          ),
+        ],
+        if (layerPoints.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              if (layerPoints.containsKey('apis'))
+                _LayerChip(
+                  label: AppStrings.resultLayerApis,
+                  points: layerPoints['apis']!,
+                ),
+              if (layerPoints.containsKey('url'))
+                _LayerChip(
+                  label: AppStrings.resultLayerUrl,
+                  points: layerPoints['url']!,
+                ),
+              if (layerPoints.containsKey('texto'))
+                _LayerChip(
+                  label: AppStrings.resultLayerText,
+                  points: layerPoints['texto']!,
+                ),
+            ],
+          ),
+        ],
+        if (visibleFindings.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (var i = 0; i < visibleFindings.length; i++)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (i == 0) ...[
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          size: 14,
+                          color: accent,
+                        ),
+                        const SizedBox(width: 5),
+                      ],
+                      Flexible(
+                        child: Text(
+                          visibleFindings[i],
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: AppTextStyles.body,
+                            fontSize: 12,
+                            color: accent,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ],
+        if (onViewDetails != null) ...[
+          const SizedBox(height: 10),
+          InkWell(
+            onTap: onViewDetails,
+            borderRadius: BorderRadius.circular(8),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 2, vertical: 10),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      AppStrings.resultViewDetail,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: AppTextStyles.body,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.gold,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 4),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 18,
+                    color: AppColors.gold,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+
     return GlassPanel(
       borderRadius: 20,
       padding: EdgeInsets.symmetric(
-        horizontal: isCompact ? 12 : 21,
-        vertical: isCompact ? 15 : 18,
+        horizontal: isCompact ? 16 : 21,
+        vertical: isCompact ? 16 : 18,
       ),
       borderColor: accent.withValues(alpha: 0.25),
       backgroundColor: accent.withValues(alpha: 0.08),
@@ -252,240 +522,35 @@ class ResultCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                children: [
-                  Container(
-                    constraints: BoxConstraints(minWidth: isCompact ? 90 : 105),
-                    padding: EdgeInsets.all(isCompact ? 12 : 15),
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        right: BorderSide(color: Color(0x17FFFFFF)),
+              if (isCompact) ...[
+                Padding(
+                  padding: EdgeInsets.only(right: onDismiss != null ? 36 : 0),
+                  child: scoreBlock,
+                ),
+                const SizedBox(height: 12),
+                detailsColumn,
+              ] else
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    scoreBlock,
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          right: onDismiss != null ? 32 : 0,
+                        ),
+                        child: detailsColumn,
                       ),
                     ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(
-                                text: '$score',
-                                style: TextStyle(
-                                  fontFamily: AppTextStyles.display,
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.w800,
-                                  color: accent,
-                                ),
-                              ),
-                              const TextSpan(
-                                text: '/100',
-                                style: TextStyle(
-                                  fontFamily: AppTextStyles.body,
-                                  fontSize: 12,
-                                  color: Color(0xFF8A7D8E),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(level.icon, size: 12, color: accent),
-                            const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(
-                                level.label.toUpperCase(),
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontFamily: AppTextStyles.body,
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.8,
-                                  color: accent,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: isCompact ? 8 : 20),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text(
-                          AppStrings.resultEyebrow,
-                          style: TextStyle(
-                            fontFamily: AppTextStyles.body,
-                            fontSize: 8,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.6,
-                            color: AppColors.gold,
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            fontFamily: AppTextStyles.body,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textLight,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          copy,
-                          style: const TextStyle(
-                            fontFamily: AppTextStyles.body,
-                            fontSize: 10,
-                            height: 1.45,
-                            color: Color(0xFF887D8C),
-                          ),
-                        ),
-                        if (shortCircuitText != null) ...[
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.riskCritical.withValues(
-                                alpha: 0.16,
-                              ),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: AppColors.riskCritical.withValues(
-                                  alpha: 0.35,
-                                ),
-                              ),
-                            ),
-                            child: Text(
-                              shortCircuitText,
-                              style: const TextStyle(
-                                fontFamily: AppTextStyles.body,
-                                fontSize: 8,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.riskCritical,
-                              ),
-                            ),
-                          ),
-                        ],
-                        if (layerPoints.isNotEmpty) ...[
-                          const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 6,
-                            runSpacing: 6,
-                            children: [
-                              if (layerPoints.containsKey('apis'))
-                                _LayerChip(
-                                  label: AppStrings.resultLayerApis,
-                                  points: layerPoints['apis']!,
-                                ),
-                              if (layerPoints.containsKey('url'))
-                                _LayerChip(
-                                  label: AppStrings.resultLayerUrl,
-                                  points: layerPoints['url']!,
-                                ),
-                              if (layerPoints.containsKey('texto'))
-                                _LayerChip(
-                                  label: AppStrings.resultLayerText,
-                                  points: layerPoints['texto']!,
-                                ),
-                            ],
-                          ),
-                        ],
-                        if (visibleFindings.isNotEmpty) ...[
-                          const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 6,
-                            runSpacing: 6,
-                            children: [
-                              for (var i = 0; i < visibleFindings.length; i++)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 7,
-                                    vertical: 5,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: accent.withValues(alpha: 0.10),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      if (i == 0) ...[
-                                        Icon(
-                                          Icons.warning_amber_rounded,
-                                          size: 13,
-                                          color: accent,
-                                        ),
-                                        const SizedBox(width: 4),
-                                      ],
-                                      Flexible(
-                                        child: Text(
-                                          visibleFindings[i],
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontFamily: AppTextStyles.body,
-                                            fontSize: 8,
-                                            color: accent,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ],
-                        if (onViewDetails != null) ...[
-                          const SizedBox(height: 10),
-                          InkWell(
-                            onTap: onViewDetails,
-                            borderRadius: BorderRadius.circular(6),
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 2),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    AppStrings.resultViewDetail,
-                                    style: TextStyle(
-                                      fontFamily: AppTextStyles.body,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.gold,
-                                    ),
-                                  ),
-                                  SizedBox(width: 3),
-                                  Icon(
-                                    Icons.chevron_right_rounded,
-                                    size: 14,
-                                    color: AppColors.gold,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
               if (isPartial) ...[
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 7,
+                    horizontal: 12,
+                    vertical: 9,
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.riskMedium.withValues(alpha: 0.12),
@@ -498,16 +563,17 @@ class ResultCard extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.info_outline_rounded,
-                        size: 14,
+                        size: 16,
                         color: AppColors.riskMedium,
                       ),
-                      SizedBox(width: 6),
+                      SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           AppStrings.resultPartialWarning,
                           style: TextStyle(
                             fontFamily: AppTextStyles.body,
-                            fontSize: 9,
+                            fontSize: 12,
+                            height: 1.4,
                             color: AppColors.riskMedium,
                           ),
                         ),
@@ -527,13 +593,13 @@ class ResultCard extends StatelessWidget {
                 label: AppStrings.alertDismiss,
                 child: InkWell(
                   onTap: onDismiss,
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(10),
                   child: const Padding(
-                    padding: EdgeInsets.all(4),
+                    padding: EdgeInsets.all(10),
                     child: Icon(
                       Icons.close_rounded,
-                      size: 16,
-                      color: Color(0xFF766A7B),
+                      size: 18,
+                      color: AppColors.muted,
                     ),
                   ),
                 ),
@@ -554,16 +620,16 @@ class _LayerChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
         color: const Color(0x14FFFFFF),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         '$label: $points',
         style: const TextStyle(
           fontFamily: AppTextStyles.body,
-          fontSize: 8,
+          fontSize: 12,
           fontWeight: FontWeight.w600,
           color: AppColors.textLight,
         ),

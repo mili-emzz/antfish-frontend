@@ -214,7 +214,6 @@ class _AppShellHostState extends State<_AppShellHost> {
     final Widget tabBody = switch (_currentTab) {
       AppTab.home => HomeScreen(
         onOpenProfile: () => _selectTab(AppTab.profile),
-        onViewAllHistory: () => _selectTab(AppTab.history),
       ),
       AppTab.history => const HistoryScreen(),
       AppTab.stats => const StatsScreen(),

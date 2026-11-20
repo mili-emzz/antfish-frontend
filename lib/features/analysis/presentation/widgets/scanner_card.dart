@@ -163,9 +163,9 @@ class _ScannerCardState extends State<ScannerCard> {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: AppTextStyles.body,
-                    fontSize: 9,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: 1.35,
+                    letterSpacing: 1.2,
                     color: AppColors.gold,
                   ),
                 ),
@@ -175,9 +175,9 @@ class _ScannerCardState extends State<ScannerCard> {
                   AppStrings.homeScannerEngineStatus,
                   style: TextStyle(
                     fontFamily: AppTextStyles.body,
-                    fontSize: 9,
+                    fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF746B78),
+                    color: AppColors.muted,
                   ),
                 ),
             ],
@@ -187,7 +187,7 @@ class _ScannerCardState extends State<ScannerCard> {
             AppStrings.homeScannerHeading,
             style: TextStyle(
               fontFamily: AppTextStyles.display,
-              fontSize: 21,
+              fontSize: 22,
               fontWeight: FontWeight.w700,
               letterSpacing: -0.63,
               color: AppColors.textLight,
@@ -198,9 +198,9 @@ class _ScannerCardState extends State<ScannerCard> {
             AppStrings.homeCopy,
             style: TextStyle(
               fontFamily: AppTextStyles.body,
-              fontSize: 12,
+              fontSize: 14,
               color: AppColors.muted,
-              height: 1.4,
+              height: 1.5,
             ),
           ),
           const SizedBox(height: 19),
@@ -279,8 +279,8 @@ class _ScannerCardState extends State<ScannerCard> {
                         : null,
                     style: const TextStyle(
                       fontFamily: AppTextStyles.body,
-                      fontSize: 12,
-                      height: 1.6,
+                      fontSize: 14,
+                      height: 1.55,
                       color: Color(0xFFF5EFF6),
                     ),
                     decoration: InputDecoration(
@@ -294,29 +294,32 @@ class _ScannerCardState extends State<ScannerCard> {
                           : AppStrings.homeInputSmsHint,
                       hintStyle: const TextStyle(
                         fontFamily: AppTextStyles.body,
-                        fontSize: 12,
-                        height: 1.6,
-                        color: Color(0xFF655B69),
+                        fontSize: 14,
+                        height: 1.55,
+                        color: Color(0xFFA69AAA),
                       ),
                     ),
                   ),
                 ),
                 if (_controller.text.isNotEmpty && !widget.isSubmitting) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4),
                   Semantics(
                     button: true,
                     label: AppStrings.homeInputClearSemantics,
                     child: InkWell(
                       onTap: _clearInput,
-                      borderRadius: BorderRadius.circular(8),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 4),
-                        child: Text(
-                          '×',
-                          style: TextStyle(
-                            fontSize: 20,
-                            height: 1,
-                            color: Color(0xFF766A7B),
+                      borderRadius: BorderRadius.circular(10),
+                      child: const SizedBox(
+                        width: 44,
+                        height: 44,
+                        child: Center(
+                          child: Text(
+                            '×',
+                            style: TextStyle(
+                              fontSize: 22,
+                              height: 1,
+                              color: AppColors.muted,
+                            ),
                           ),
                         ),
                       ),
@@ -327,17 +330,17 @@ class _ScannerCardState extends State<ScannerCard> {
             ),
           ),
           if (_validationError != null) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
               _validationError!,
               style: const TextStyle(
                 fontFamily: AppTextStyles.body,
-                fontSize: 10,
+                fontSize: 12,
                 color: AppColors.riskCritical,
               ),
             ),
           ],
-          const SizedBox(height: 9),
+          const SizedBox(height: 10),
           // .privacy-note
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 2),
@@ -345,22 +348,22 @@ class _ScannerCardState extends State<ScannerCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: EdgeInsets.only(top: 1),
+                  padding: EdgeInsets.only(top: 2),
                   child: Icon(
                     Icons.lock_outline_rounded,
-                    size: 13,
-                    color: Color(0xFF756B79),
+                    size: 15,
+                    color: AppColors.muted,
                   ),
                 ),
-                SizedBox(width: 5),
+                SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     AppStrings.homePrivacyNote,
                     style: TextStyle(
                       fontFamily: AppTextStyles.body,
-                      fontSize: 9,
-                      color: Color(0xFF756B79),
-                      height: 1.35,
+                      fontSize: 12,
+                      color: AppColors.muted,
+                      height: 1.45,
                     ),
                   ),
                 ),

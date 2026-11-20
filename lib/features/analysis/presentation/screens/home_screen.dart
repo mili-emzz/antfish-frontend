@@ -7,32 +7,29 @@ import '../../../../core/ui/theme/app_colors.dart';
 import '../../../../core/ui/theme/app_text_styles.dart';
 import '../../../../core/ui/widgets/app_alert.dart';
 import '../../../../core/ui/widgets/brand_mark.dart';
-import '../../../../core/ui/widgets/glass_panel.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../domain/models/analysis_result.dart';
 import '../analysis_scope.dart';
-import '../widgets/analysis_detail_dialog.dart';
-import '../widgets/history_row_item.dart';
+import '../widgets/analysis_report_sheet.dart';
 import '../widgets/risk_traffic_light_card.dart';
 import '../widgets/scanner_card.dart';
 
-/// Pantalla principal de escaneo (`HomeScreen` en App.tsx).
+/// Pantalla principal de escaneo (`HomeScreen`).
 ///
 /// Cuando existe [AnalysisScope] con repositorio conectado:
 /// - Envía URLs y mensajes SMS a `POST /api/v1/analysis`.
-/// - Muestra el resultado real en [ResultCard.fromAnalysis] sin recalcular score.
-/// - Carga y muestra los análisis recientes desde `GET /api/v1/analysis`.
+/// - Abre automáticamente [AnalysisReportSheet] deslizable a pantalla completa
+///   con el diagnóstico íntegro sin recalcular score.
+/// - Mantiene [ResultCard.fromAnalysis] como acceso rápido al último resultado.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     this.initialShowResult = false,
     this.onOpenProfile,
-    this.onViewAllHistory,
   });
 
   final bool initialShowResult;
   final VoidCallback? onOpenProfile;
-  final VoidCallback? onViewAllHistory;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -40,7 +37,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late bool _showPreviewResult = widget.initialShowResult;
-  bool _requestedInitialHistory = false;
 
   @override
   void didUpdateWidget(covariant HomeScreen oldWidget) {
@@ -50,36 +46,38 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_requestedInitialHistory) return;
-    final controller = AnalysisScope.maybeOf(context);
-    if (controller != null && controller.hasBackend) {
-      _requestedInitialHistory = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) controller.loadHistory();
-      });
-    }
-  }
-
   Future<void> _openDetail(
     BuildContext context,
     AnalysisController controller,
-    AnalysisResult item,
-  ) async {
-    final detailed = await controller.fetchDetail(item.id) ?? item;
+    AnalysisResult item, {
+    bool fetchFresh = true,
+  }) async {
+    final detailed = fetchFresh
+        ? (await controller.fetchDetail(item.id) ?? item)
+        : item;
     if (!context.mounted) return;
-    final deleted = await showDialog<bool>(
-      context: context,
-      builder: (_) => AnalysisDetailDialog(
-        result: detailed,
-        onDelete: () => controller.deleteHistoryItem(detailed.id),
-      ),
+    final deleted = await showAnalysisReportSheet(
+      context,
+      result: detailed,
+      onDelete: () => controller.deleteHistoryItem(detailed.id),
     );
     if (deleted == true && context.mounted) {
       showAppSnackBar(context, AppStrings.analysisDeleteSuccess);
     }
+  }
+
+  Future<void> _submitAndShowReport(
+    BuildContext context,
+    AnalysisController controller,
+    AnalysisInputType type,
+    String content,
+  ) async {
+    final result = await controller.submitAnalysis(
+      tipoEntrada: type.apiValue,
+      contenido: content,
+    );
+    if (result == null || !context.mounted) return;
+    await _openDetail(context, controller, result, fetchFresh: false);
   }
 
   static String _initialsFor(String name) {
@@ -128,10 +126,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final analyzeError = controller?.analyzeError;
     final latestResult = controller?.latestResult;
 
-    final List<ScanHistoryItem> recentItems = hasBackend
-        ? controller!.history.take(3).map(ScanHistoryItem.fromAnalysis).toList()
-        : demoScanHistory.take(3).toList();
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
@@ -158,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     greeting,
                     style: const TextStyle(
                       fontFamily: AppTextStyles.body,
-                      fontSize: 13,
+                      fontSize: 14,
                       color: AppColors.muted,
                     ),
                   ),
@@ -210,12 +204,8 @@ class _HomeScreenState extends State<HomeScreen> {
             controller?.dismissLatestResult();
           },
           onAnalyzeSubmit: hasBackend
-              ? (type, content) {
-                  controller!.submitAnalysis(
-                    tipoEntrada: type.apiValue,
-                    contenido: content,
-                  );
-                }
+              ? (type, content) =>
+                    _submitAndShowReport(context, controller!, type, content)
               : null,
         ),
         const SizedBox(height: 18),
@@ -233,88 +223,6 @@ class _HomeScreenState extends State<HomeScreen> {
           )
         else
           const RiskTrafficLightCard(),
-        const SizedBox(height: 35),
-        // .recent-section
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(AppStrings.recentEyebrow, style: AppTextStyles.eyebrow),
-                  SizedBox(height: 5),
-                  Text(
-                    AppStrings.recentTitle,
-                    style: TextStyle(
-                      fontFamily: AppTextStyles.display,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.54,
-                      color: AppColors.textLight,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Semantics(
-              button: true,
-              enabled: widget.onViewAllHistory != null,
-              label: AppStrings.recentViewAll,
-              child: InkWell(
-                onTap: widget.onViewAllHistory,
-                borderRadius: BorderRadius.circular(8),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        AppStrings.recentViewAll,
-                        style: TextStyle(
-                          fontFamily: AppTextStyles.body,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.gold,
-                        ),
-                      ),
-                      SizedBox(width: 3),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        size: 15,
-                        color: AppColors.gold,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 18),
-        if (hasBackend && recentItems.isEmpty)
-          const GlassPanel(
-            borderRadius: 21,
-            padding: EdgeInsets.all(20),
-            child: Text(
-              AppStrings.historyEmpty,
-              style: AppTextStyles.bodyMuted,
-            ),
-          )
-        else
-          HistoryListCard(
-            items: recentItems,
-            compactList: true,
-            onItemTap: hasBackend
-                ? (item) {
-                    if (item.analysis != null) {
-                      _openDetail(context, controller!, item.analysis!);
-                    }
-                  }
-                : null,
-          ),
       ],
     );
   }
@@ -336,8 +244,8 @@ class _AvatarButton extends StatelessWidget {
         onTap: onTap,
         customBorder: const CircleBorder(),
         child: SizedBox(
-          width: 40,
-          height: 40,
+          width: 44,
+          height: 44,
           child: Stack(
             children: [
               Positioned.fill(
@@ -356,7 +264,7 @@ class _AvatarButton extends StatelessWidget {
                       initials,
                       style: const TextStyle(
                         fontFamily: AppTextStyles.body,
-                        fontSize: 11,
+                        fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: AppColors.gold,
                       ),

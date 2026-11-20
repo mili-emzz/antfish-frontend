@@ -210,20 +210,20 @@ class HistoryRowItem extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontFamily: AppTextStyles.body,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFFE6DEE8),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textLight,
                         ),
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 4),
                       Text(
                         '${item.typeLabel} · ${item.time}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontFamily: AppTextStyles.body,
-                          fontSize: 8,
-                          color: Color(0xFF786D7C),
+                          fontSize: 12,
+                          color: AppColors.muted,
                         ),
                       ),
                     ],
@@ -233,23 +233,23 @@ class HistoryRowItem extends StatelessWidget {
                   const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 4,
+                      horizontal: 10,
+                      vertical: 5,
                     ),
                     decoration: BoxDecoration(
-                      color: tone.withValues(alpha: 0.09),
+                      color: tone.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(item.level.icon, size: 11, color: tone),
+                        Icon(item.level.icon, size: 14, color: tone),
                         const SizedBox(width: 4),
                         Text(
                           '${item.risk} · ${item.score}',
                           style: TextStyle(
                             fontFamily: AppTextStyles.body,
-                            fontSize: 8,
+                            fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: tone,
                           ),
@@ -261,8 +261,8 @@ class HistoryRowItem extends StatelessWidget {
                 const SizedBox(width: 8),
                 const Icon(
                   Icons.chevron_right_rounded,
-                  size: 16,
-                  color: Color(0xFF5F5663),
+                  size: 18,
+                  color: AppColors.muted,
                 ),
               ],
             ),

@@ -9,7 +9,7 @@ import '../../../../core/ui/widgets/page_header.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../domain/models/analysis_result.dart';
 import '../analysis_scope.dart';
-import '../widgets/analysis_detail_dialog.dart';
+import '../widgets/analysis_report_sheet.dart';
 import '../widgets/history_row_item.dart';
 import '../widgets/scanner_card.dart';
 
@@ -60,12 +60,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
   ) async {
     final detailed = await controller.fetchDetail(item.id) ?? item;
     if (!context.mounted) return;
-    final deleted = await showDialog<bool>(
-      context: context,
-      builder: (_) => AnalysisDetailDialog(
-        result: detailed,
-        onDelete: () => controller.deleteHistoryItem(detailed.id),
-      ),
+    final deleted = await showAnalysisReportSheet(
+      context,
+      result: detailed,
+      onDelete: () => controller.deleteHistoryItem(detailed.id),
     );
     if (deleted == true && context.mounted) {
       showAppSnackBar(context, AppStrings.analysisDeleteSuccess);
@@ -145,7 +143,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   AppStrings.historyLoading,
                   style: TextStyle(
                     fontFamily: AppTextStyles.body,
-                    fontSize: 11,
+                    fontSize: 13,
                     color: AppColors.muted,
                   ),
                 ),
@@ -226,7 +224,8 @@ class _FilterChipButton extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(9),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+            constraints: const BoxConstraints(minHeight: 40),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
             decoration: BoxDecoration(
               color: active ? const Color(0x1AD7BA89) : Colors.transparent,
               borderRadius: BorderRadius.circular(9),
@@ -235,9 +234,9 @@ class _FilterChipButton extends StatelessWidget {
               label,
               style: TextStyle(
                 fontFamily: AppTextStyles.body,
-                fontSize: 10,
+                fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: active ? AppColors.gold : const Color(0xFF7F7483),
+                color: active ? AppColors.gold : AppColors.muted,
               ),
             ),
           ),

@@ -1,15 +1,46 @@
 import 'package:antfish/app.dart';
 import 'package:antfish/core/router/app_routes.dart';
-import 'package:antfish/features/analysis/presentation/screens/history_screen.dart';
-import 'package:antfish/features/analysis/presentation/widgets/history_row_item.dart';
+import 'package:antfish/core/ui/widgets/risk_badge.dart';
+import 'package:antfish/features/analysis/analysis.dart';
 import 'package:antfish/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+class _FakeHistoryRepository implements AnalysisRepository {
+  _FakeHistoryRepository(List<AnalysisResult> initial)
+    : _items = List<AnalysisResult>.from(initial);
+
+  final List<AnalysisResult> _items;
+  String? lastDeletedId;
+
+  @override
+  Future<AnalysisResult> analyze({
+    required String tipoEntrada,
+    required String contenido,
+  }) async => _items.first;
+
+  @override
+  Future<AnalysisHistoryPage> getHistory({
+    int limit = 20,
+    String? cursor,
+  }) async => AnalysisHistoryPage(items: List<AnalysisResult>.from(_items));
+
+  @override
+  Future<AnalysisResult> getAnalysisById(String id) async =>
+      _items.firstWhere((e) => e.id == id);
+
+  @override
+  Future<void> deleteAnalysis(String id) async {
+    lastDeletedId = id;
+    _items.removeWhere((e) => e.id == id);
+  }
+}
 
 Future<void> _pumpHistory(
   WidgetTester tester, {
   Size size = const Size(390, 844),
   double textScale = 1.0,
+  AnalysisRepository? analysisRepository,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1.0;
@@ -17,7 +48,12 @@ Future<void> _pumpHistory(
   tester.platformDispatcher.textScaleFactorTestValue = textScale;
   addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
-  await tester.pumpWidget(const AntFishApp(initialRoute: AppRoutes.history));
+  await tester.pumpWidget(
+    AntFishApp(
+      initialRoute: AppRoutes.history,
+      analysisRepository: analysisRepository,
+    ),
+  );
   await tester.pumpAndSettle();
 }
 
@@ -60,6 +96,56 @@ void main() {
       final smsCount = tester.widgetList(find.byType(HistoryRowItem)).length;
       expect(smsCount, 3);
     });
+
+    testWidgets(
+      'Tocar un elemento del historial abre AnalysisReportSheet y permite eliminar',
+      (tester) async {
+        final repo = _FakeHistoryRepository([
+          AnalysisResult(
+            id: 'hist-1',
+            tipoEntrada: 'url',
+            scoreTotal: 75,
+            nivelRiesgo: RiskLevel.alto,
+            puntosPorCapa: const {'url': 75},
+            analisisParcial: false,
+            fechaAnalisis: DateTime(2026, 11, 20, 14, 30),
+            urlsExtraidas: const [
+              ExtractedUrl(
+                url: 'https://alerta-bancaria.example',
+                dominio: 'alerta-bancaria.example',
+              ),
+            ],
+            hallazgos: const [
+              AnalysisFinding(
+                reglaCodigo: 'URL_01',
+                titulo: 'Dominio sospechoso',
+                descripcion: 'Estructura inusual en el enlace.',
+                puntos: 75,
+              ),
+            ],
+          ),
+        ]);
+
+        await _pumpHistory(tester, analysisRepository: repo);
+
+        await tester.tap(find.byType(HistoryRowItem).first);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(AnalysisReportSheet), findsOneWidget);
+        expect(find.text('Dominio sospechoso'), findsOneWidget);
+
+        final deleteBtn = find.text(AppStrings.analysisDetailDelete);
+        await tester.ensureVisible(deleteBtn);
+        await tester.tap(deleteBtn);
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text(AppStrings.analysisDetailDelete).last);
+        await tester.pumpAndSettle();
+
+        expect(repo.lastDeletedId, 'hist-1');
+        expect(find.byType(AnalysisReportSheet), findsNothing);
+      },
+    );
 
     testWidgets('Sin overflow en pantallas de 320x568 y texto al 200 %', (
       tester,
