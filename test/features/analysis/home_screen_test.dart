@@ -241,6 +241,21 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(findingFinder, findsOneWidget);
+
+      final disclaimerFinder = find.descendant(
+        of: sheet,
+        matching: find.text(AppStrings.analysisDisclaimerTitle),
+      );
+      await tester.scrollUntilVisible(
+        disclaimerFinder,
+        250,
+        scrollable: find
+            .descendant(of: sheet, matching: find.byType(Scrollable))
+            .first,
+      );
+      await tester.pumpAndSettle();
+
+      expect(disclaimerFinder, findsOneWidget);
     });
 
     testWidgets('Sin overflow en pantallas de 320x568 y texto al 200 %', (

@@ -227,6 +227,10 @@ abstract final class AppStrings {
       'URL secundaria (solo señales sintácticas)';
   static const String analysisDetailFindingsTitle = 'Hallazgos detectados';
   static const String analysisDetailRecommendationsTitle = 'Recomendaciones';
+  static const String analysisDisclaimerTitle =
+      'Aviso sobre fuentes y precisión';
+  static const String analysisDisclaimerBody =
+      'Este diagnóstico es orientativo y sus puntajes y porcentajes son una estimación basada en nuestro motor heurístico y en servicios externos de terceros (Google Web Risk, VirusTotal y PhishTank). Estas fuentes pueden contener falsos positivos, falsos negativos o retrasos ante amenazas recientes, por lo que un resultado bajo no garantiza que el enlace o mensaje sea 100 % seguro. AntFish no sustituye tu criterio ni asume responsabilidad por decisiones, accesos o pérdidas derivadas del uso de esta información.';
   static const String analysisDetailSourcesTitle = 'Fuentes consultadas';
   static const String analysisDetailClose = 'Cerrar';
   static const String analysisDetailDelete = 'Eliminar del historial';

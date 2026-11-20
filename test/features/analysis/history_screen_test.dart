@@ -131,11 +131,22 @@ void main() {
         await tester.tap(find.byType(HistoryRowItem).first);
         await tester.pumpAndSettle();
 
-        expect(find.byType(AnalysisReportSheet), findsOneWidget);
+        final sheet = find.byType(AnalysisReportSheet);
+        expect(sheet, findsOneWidget);
         expect(find.text('Dominio sospechoso'), findsOneWidget);
 
-        final deleteBtn = find.text(AppStrings.analysisDetailDelete);
-        await tester.ensureVisible(deleteBtn);
+        final deleteBtn = find.descendant(
+          of: sheet,
+          matching: find.text(AppStrings.analysisDetailDelete),
+        );
+        await tester.scrollUntilVisible(
+          deleteBtn,
+          250,
+          scrollable: find
+              .descendant(of: sheet, matching: find.byType(Scrollable))
+              .first,
+        );
+        await tester.pumpAndSettle();
         await tester.tap(deleteBtn);
         await tester.pumpAndSettle();
 

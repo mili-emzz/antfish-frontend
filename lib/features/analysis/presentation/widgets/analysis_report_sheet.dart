@@ -538,6 +538,51 @@ class _AnalysisReportSheetState extends State<AnalysisReportSheet> {
                               ),
                             ),
                         ],
+                        const SizedBox(height: 18),
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: const Color(0x0DFFFFFF),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: const Color(0x1AFFFFFF)),
+                          ),
+                          child: const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.info_outline_rounded,
+                                    size: 16,
+                                    color: AppColors.gold,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      AppStrings.analysisDisclaimerTitle,
+                                      style: TextStyle(
+                                        fontFamily: AppTextStyles.body,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.textLight,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                AppStrings.analysisDisclaimerBody,
+                                style: TextStyle(
+                                  fontFamily: AppTextStyles.body,
+                                  fontSize: 13,
+                                  height: 1.5,
+                                  color: AppColors.muted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                         if (result.fuentesConsultadas.isNotEmpty) ...[
                           const SizedBox(height: 20),
                           const _SectionTitle(
