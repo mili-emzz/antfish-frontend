@@ -3,17 +3,42 @@ import 'package:flutter/material.dart';
 import '../../../../core/ui/layout/breakpoints.dart';
 import '../../../../core/ui/theme/app_colors.dart';
 import '../../../../core/ui/theme/app_text_styles.dart';
+import '../../../../core/ui/widgets/app_alert.dart';
+import '../../../../core/ui/widgets/app_buttons.dart';
 import '../../../../core/ui/widgets/glass_panel.dart';
 import '../../../../core/ui/widgets/page_header.dart';
 import '../../../../l10n/app_strings.dart';
 import '../../domain/models/user_metrics.dart';
+import '../metrics_scope.dart';
 
-/// Pantalla de métricas de protección (`StatsScreen`), alineada con el esquema
-/// de `GET /api/v1/metrics/me` (`docs/contrato_api_v2.md` §3) sin valores mock.
-class StatsScreen extends StatelessWidget {
-  const StatsScreen({super.key, this.metrics = UserMetrics.empty});
+/// Pantalla de métricas de protección (`StatsScreen`), conectada a
+/// `GET /api/v1/metrics/me` (`docs/contrato_api_v2.md` §3) vía [MetricsScope].
+class StatsScreen extends StatefulWidget {
+  const StatsScreen({super.key, this.metrics});
 
-  final UserMetrics metrics;
+  /// Métricas explícitas opcionales (útil para previsualizaciones y pruebas).
+  /// Si es `null`, lee reactivamente de [MetricsScope] o usa [UserMetrics.empty].
+  final UserMetrics? metrics;
+
+  @override
+  State<StatsScreen> createState() => _StatsScreenState();
+}
+
+class _StatsScreenState extends State<StatsScreen> {
+  bool _requestedInitialLoad = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_requestedInitialLoad || widget.metrics != null) return;
+    final controller = MetricsScope.maybeOf(context);
+    if (controller != null && controller.hasBackend) {
+      _requestedInitialLoad = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) controller.refresh();
+      });
+    }
+  }
 
   static String _formatLastUpdated(DateTime? date) {
     if (date == null) return AppStrings.statsNoScansYet;
@@ -26,7 +51,7 @@ class StatsScreen extends StatelessWidget {
     return AppStrings.statsLastUpdated('$day/$month/$year $hour:$minute');
   }
 
-  List<_MetricItemData> get _metricCards {
+  List<_MetricItemData> _buildMetricCards(UserMetrics metrics) {
     final blockedPct = metrics.percentOfTotal(metrics.amenazasBloqueadas);
     final urlPct = metrics.percentOfTotal(metrics.totalUrl);
     final smsPct = metrics.percentOfTotal(metrics.totalSms);
@@ -59,7 +84,7 @@ class StatsScreen extends StatelessWidget {
     ];
   }
 
-  List<_BreakdownRowData> get _breakdownRows => [
+  List<_BreakdownRowData> _buildBreakdownRows(UserMetrics metrics) => [
     _BreakdownRowData(
       label: AppStrings.statsRiskSafeOrMedium,
       percent: metrics.percentOfTotal(metrics.escaneosSinAmenazaCritica),
@@ -84,10 +109,20 @@ class StatsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = MetricsScope.maybeOf(context);
+    final metrics = widget.metrics ?? controller?.metrics ?? UserMetrics.empty;
+    final isLoading =
+        widget.metrics == null && (controller?.isLoading ?? false);
+    final errorMessage = widget.metrics == null
+        ? controller?.errorMessage
+        : null;
+    final hasBackend =
+        widget.metrics == null && (controller?.hasBackend ?? false);
+
     final screenSize = ScreenSize.of(context);
     final bool isExpanded = screenSize.isExpanded;
-    final cards = _metricCards;
-    final breakdown = _breakdownRows;
+    final cards = _buildMetricCards(metrics);
+    final breakdown = _buildBreakdownRows(metrics);
     final periodLabel = _formatLastUpdated(metrics.ultimaActualizacion);
 
     return Column(
@@ -99,6 +134,46 @@ class StatsScreen extends StatelessWidget {
           title: AppStrings.statsTitle,
           copy: AppStrings.statsCopy,
         ),
+        if (isLoading) ...[
+          const Padding(
+            padding: EdgeInsets.only(bottom: 14),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.gold,
+                  ),
+                ),
+                SizedBox(width: 10),
+                Text(
+                  AppStrings.statsLoading,
+                  style: TextStyle(
+                    fontFamily: AppTextStyles.body,
+                    fontSize: 11,
+                    color: AppColors.muted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        if (errorMessage != null) ...[
+          AppAlert(message: errorMessage, variant: AlertVariant.error),
+          if (hasBackend) ...[
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: SecondaryButton(
+                label: AppStrings.statsRetry,
+                onPressed: isLoading ? null : () => controller?.refresh(),
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+        ],
         // .metric-grid (4 columnas en >800px, 2x2 en <=800px)
         if (isExpanded)
           Row(
@@ -166,13 +241,39 @@ class StatsScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  Text(
-                    periodLabel,
-                    style: const TextStyle(
-                      fontFamily: AppTextStyles.body,
-                      fontSize: 9,
-                      color: Color(0xFF756B79),
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        periodLabel,
+                        style: const TextStyle(
+                          fontFamily: AppTextStyles.body,
+                          fontSize: 9,
+                          color: Color(0xFF756B79),
+                        ),
+                      ),
+                      if (hasBackend) ...[
+                        const SizedBox(width: 8),
+                        Semantics(
+                          button: true,
+                          label: AppStrings.statsRefresh,
+                          child: InkWell(
+                            onTap: isLoading
+                                ? null
+                                : () => controller?.refresh(),
+                            borderRadius: BorderRadius.circular(8),
+                            child: const Padding(
+                              padding: EdgeInsets.all(4),
+                              child: Icon(
+                                Icons.refresh_rounded,
+                                size: 15,
+                                color: AppColors.gold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),

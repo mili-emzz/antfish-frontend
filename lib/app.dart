@@ -19,6 +19,13 @@ typedef AuthRepositoryBuilder = AuthRepository Function(
   VoidCallback onUnauthorized,
 );
 
+/// Constructor diferido para crear [MetricsRepository] conectado al
+/// [SessionController] de la aplicación.
+typedef MetricsRepositoryBuilder = MetricsRepository Function(
+  SessionController session,
+  VoidCallback onUnauthorized,
+);
+
 /// Punto de entrada del widget raíz de AntFish.
 ///
 /// Navegación provisional con rutas nombradas hasta integrar `go_router`
@@ -29,6 +36,8 @@ class AntFishApp extends StatefulWidget {
     this.initialRoute,
     this.authRepository,
     this.authRepositoryBuilder,
+    this.metricsRepository,
+    this.metricsRepositoryBuilder,
     this.sessionController,
   });
 
@@ -42,6 +51,12 @@ class AntFishApp extends StatefulWidget {
 
   /// Fábrica opcional que construye [AuthRepository] conectado a la sesión.
   final AuthRepositoryBuilder? authRepositoryBuilder;
+
+  /// Repositorio de métricas directo (pruebas).
+  final MetricsRepository? metricsRepository;
+
+  /// Fábrica opcional que construye [MetricsRepository] conectado a la sesión.
+  final MetricsRepositoryBuilder? metricsRepositoryBuilder;
 
   /// Controlador de sesión opcional (permite inyectarlo en pruebas).
   final SessionController? sessionController;
@@ -57,8 +72,20 @@ class _AntFishAppState extends State<AntFishApp> {
   late final AuthRepository? _repository =
       widget.authRepository ??
       widget.authRepositoryBuilder?.call(_session, _handleUnauthorized);
+  late final MetricsController _metricsController = MetricsController(
+    repository:
+        widget.metricsRepository ??
+        widget.metricsRepositoryBuilder?.call(_session, _handleUnauthorized),
+  );
+
+  @override
+  void dispose() {
+    _metricsController.dispose();
+    super.dispose();
+  }
 
   void _handleUnauthorized() {
+    _metricsController.reset();
     _navigatorKey.currentState?.pushNamedAndRemoveUntil(
       AppRoutes.login,
       (_) => false,
@@ -86,7 +113,10 @@ class _AntFishAppState extends State<AntFishApp> {
         child: AuthScope(
           repository: _repository,
           session: _session,
-          child: child ?? const SizedBox.shrink(),
+          child: MetricsScope(
+            controller: _metricsController,
+            child: child ?? const SizedBox.shrink(),
+          ),
         ),
       ),
     );

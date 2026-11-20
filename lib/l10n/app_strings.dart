@@ -233,6 +233,11 @@ abstract final class AppStrings {
   static const String statsBreakdownSms = 'Mensajes SMS';
   static const String statsPersistenceNote =
       'Eliminar un análisis del historial no reduce los contadores históricos.';
+  static const String statsLoading = 'Actualizando métricas...';
+  static const String statsRetry = 'Reintentar';
+  static const String statsRefresh = 'Actualizar';
+  static const String metricsLoadError =
+      'No se pudieron cargar tus métricas. Inténtalo de nuevo.';
 
   // Perfil (ProfileScreen en App.tsx)
   static const String profileEyebrow = 'CUENTA PROTEGIDA';
