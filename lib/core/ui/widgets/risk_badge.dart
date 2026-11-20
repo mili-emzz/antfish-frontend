@@ -110,13 +110,16 @@ class RiskBadge extends StatelessWidget {
         children: [
           Icon(level.icon, color: color, size: compact ? 16 : 20),
           const SizedBox(width: 6),
-          Text(
-            score != null ? '${level.label} ($score/100)' : level.label,
-            style: TextStyle(
-              color: color,
-              fontFamily: 'DM Sans',
-              fontWeight: FontWeight.w700,
-              fontSize: compact ? 12 : 14,
+          Flexible(
+            child: Text(
+              score != null ? '${level.label} ($score/100)' : level.label,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: color,
+                fontFamily: 'DM Sans',
+                fontWeight: FontWeight.w700,
+                fontSize: compact ? 12 : 14,
+              ),
             ),
           ),
         ],

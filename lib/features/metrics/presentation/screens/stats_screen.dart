@@ -152,7 +152,7 @@ class _StatsScreenState extends State<StatsScreen> {
                   AppStrings.statsLoading,
                   style: TextStyle(
                     fontFamily: AppTextStyles.body,
-                    fontSize: 11,
+                    fontSize: 13,
                     color: AppColors.muted,
                   ),
                 ),
@@ -249,8 +249,8 @@ class _StatsScreenState extends State<StatsScreen> {
                         periodLabel,
                         style: const TextStyle(
                           fontFamily: AppTextStyles.body,
-                          fontSize: 9,
-                          color: Color(0xFF756B79),
+                          fontSize: 12,
+                          color: AppColors.muted,
                         ),
                       ),
                       if (hasBackend)
@@ -263,10 +263,10 @@ class _StatsScreenState extends State<StatsScreen> {
                                 : () => controller?.refresh(),
                             borderRadius: BorderRadius.circular(8),
                             child: const Padding(
-                              padding: EdgeInsets.all(4),
+                              padding: EdgeInsets.all(8),
                               child: Icon(
                                 Icons.refresh_rounded,
-                                size: 15,
+                                size: 18,
                                 color: AppColors.gold,
                               ),
                             ),
@@ -288,8 +288,9 @@ class _StatsScreenState extends State<StatsScreen> {
                 AppStrings.statsPersistenceNote,
                 style: TextStyle(
                   fontFamily: AppTextStyles.body,
-                  fontSize: 9,
-                  color: Color(0xFF756B79),
+                  fontSize: 12,
+                  height: 1.45,
+                  color: AppColors.muted,
                 ),
               ),
             ],
@@ -350,22 +351,23 @@ class _MetricCard extends StatelessWidget {
               color: AppColors.textLight,
             ),
           ),
-          const SizedBox(height: 1),
+          const SizedBox(height: 4),
           Text(
             data.label,
             style: const TextStyle(
               fontFamily: AppTextStyles.body,
-              fontSize: 9,
-              color: Color(0xFFA99DAB),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textLight,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 3),
           Text(
             data.sublabel,
             style: const TextStyle(
               fontFamily: AppTextStyles.body,
-              fontSize: 7,
-              color: Color(0xFF685F6C),
+              fontSize: 12,
+              color: AppColors.muted,
             ),
           ),
         ],
@@ -395,23 +397,24 @@ class _ThreatBreakdownBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        SizedBox(
-          width: 115,
+        Flexible(
+          flex: 5,
           child: Text(
             data.label,
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontFamily: AppTextStyles.body,
-              fontSize: 9,
-              color: Color(0xFFA89DAB),
+              fontSize: 12,
+              color: AppColors.muted,
             ),
           ),
         ),
         const SizedBox(width: 10),
         Expanded(
+          flex: 5,
           child: Container(
-            height: 5,
+            height: 6,
             decoration: BoxDecoration(
               color: const Color(0x0EFFFFFF),
               borderRadius: BorderRadius.circular(10),
@@ -430,15 +433,15 @@ class _ThreatBreakdownBar extends StatelessWidget {
         ),
         const SizedBox(width: 10),
         SizedBox(
-          width: 36,
+          width: 44,
           child: Text(
             '${data.percent}%',
             textAlign: TextAlign.right,
             style: const TextStyle(
               fontFamily: AppTextStyles.body,
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: Color(0xFFA89DAB),
+              color: AppColors.textLight,
             ),
           ),
         ),

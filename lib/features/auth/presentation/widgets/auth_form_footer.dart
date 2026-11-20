@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/ui/theme/app_colors.dart';
 import '../../../../core/ui/theme/app_text_styles.dart';
 import '../../../../core/ui/widgets/app_buttons.dart';
 import '../../../../core/ui/widgets/labeled_divider.dart';
@@ -39,15 +40,12 @@ class AuthFormFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final legalStyle = AppTextStyles.caption.copyWith(
-      fontSize: 11,
-      color: const Color(0xFF7E7382),
-    );
+    final legalStyle = AppTextStyles.caption;
     final legalLinkStyle = legalStyle.copyWith(
-      color: const Color(0xFFB09BB5),
+      color: AppColors.gold,
       fontWeight: FontWeight.w600,
       decoration: TextDecoration.underline,
-      decorationColor: const Color(0x66B09BB5),
+      decorationColor: const Color(0x66D7BA89),
     );
 
     return Column(

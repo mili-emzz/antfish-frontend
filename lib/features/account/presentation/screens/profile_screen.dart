@@ -143,15 +143,15 @@ class ProfileScreen extends StatelessWidget {
                       displayEmail,
                       style: const TextStyle(
                         fontFamily: AppTextStyles.body,
-                        fontSize: 10,
-                        color: Color(0xFF8B7F8F),
+                        fontSize: 13,
+                        color: AppColors.muted,
                       ),
                     ),
-                    const SizedBox(height: 7),
+                    const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 4,
+                        horizontal: 10,
+                        vertical: 5,
                       ),
                       decoration: BoxDecoration(
                         color: const Color(0x146AD6A2),
@@ -162,17 +162,17 @@ class ProfileScreen extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.check_rounded,
-                            size: 12,
+                            size: 14,
                             color: AppColors.riskSafe,
                           ),
-                          SizedBox(width: 4),
+                          SizedBox(width: 5),
                           Flexible(
                             child: Text(
                               AppStrings.profileVerifiedBadge,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontFamily: AppTextStyles.body,
-                                fontSize: 8,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.riskSafe,
                               ),
@@ -241,9 +241,9 @@ class ProfileScreen extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontFamily: AppTextStyles.body,
-                        fontSize: 11,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFFDC7588),
+                        color: Color(0xFFEE879A),
                       ),
                     ),
                   ),
@@ -271,8 +271,8 @@ class ProfileScreen extends StatelessWidget {
           textAlign: TextAlign.center,
           style: TextStyle(
             fontFamily: AppTextStyles.body,
-            fontSize: 8,
-            color: Color(0xFF5F5663),
+            fontSize: 12,
+            color: AppColors.muted,
           ),
         ),
       ],
@@ -481,7 +481,7 @@ class _SettingsRow extends StatelessWidget {
                       title,
                       style: const TextStyle(
                         fontFamily: AppTextStyles.body,
-                        fontSize: 11,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textLight,
                       ),
@@ -491,8 +491,8 @@ class _SettingsRow extends StatelessWidget {
                       subtitle,
                       style: const TextStyle(
                         fontFamily: AppTextStyles.body,
-                        fontSize: 8,
-                        color: Color(0xFF766B7A),
+                        fontSize: 12,
+                        color: AppColors.muted,
                       ),
                     ),
                   ],

@@ -10,6 +10,9 @@ abstract final class AppColors {
   static const Color glassPanel = Color(
     0x0EFFFFFF,
   ); // rgba(255, 255, 255, 0.055)
+  static const Color sheetSurface = Color(
+    0xF51A0C22,
+  ); // Superficie elevada de alto contraste para hojas deslizables
 
   // Colores principales de marca
   static const Color plum = Color(
@@ -21,7 +24,9 @@ abstract final class AppColors {
   static const Color gold = Color(
     0xFFD7BA89,
   ); // Acciones, protección y destacados
-  static const Color muted = Color(0xFFAA9EAE); // Texto secundario
+  static const Color muted = Color(
+    0xFFC4B9C9,
+  ); // Texto secundario con contraste WCAG AA (>= 4.5:1) sobre cristal oscuro
   static const Color textLight = Color(
     0xFFF3EDF7,
   ); // Texto principal de alto contraste
