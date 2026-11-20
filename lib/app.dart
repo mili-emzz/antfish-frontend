@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'core/router/app_routes.dart';
 import 'core/session/session_controller.dart';
+import 'core/session/session_scope.dart';
 import 'core/storage/token_storage.dart';
 import 'core/ui/layout/app_shell.dart';
 import 'core/ui/theme/app_theme.dart';
@@ -11,32 +12,63 @@ import 'features/analysis/analysis.dart';
 import 'features/auth/auth.dart';
 import 'features/metrics/metrics.dart';
 
+/// Constructor diferido para crear [AuthRepository] conectado al
+/// [SessionController] de la aplicación.
+typedef AuthRepositoryBuilder = AuthRepository Function(
+  SessionController session,
+  VoidCallback onUnauthorized,
+);
+
 /// Punto de entrada del widget raíz de AntFish.
 ///
 /// Navegación provisional con rutas nombradas hasta integrar `go_router`
 /// con guards de sesión (DPF-02).
 class AntFishApp extends StatefulWidget {
-  const AntFishApp({super.key, this.initialRoute, this.authRepository});
+  const AntFishApp({
+    super.key,
+    this.initialRoute,
+    this.authRepository,
+    this.authRepositoryBuilder,
+    this.sessionController,
+  });
 
   /// Ruta inicial opcional (útil para pruebas de widgets). Si no se indica,
   /// toma `INITIAL_ROUTE` de `--dart-define` o [AppRoutes.login].
   final String? initialRoute;
 
-  /// Repositorio de autenticación; si es null, Google Sign-In queda inactivo.
+  /// Repositorio de autenticación directo (pruebas). Si es null y tampoco se
+  /// indica [authRepositoryBuilder], los botones de API quedan inactivos.
   final AuthRepository? authRepository;
+
+  /// Fábrica opcional que construye [AuthRepository] conectado a la sesión.
+  final AuthRepositoryBuilder? authRepositoryBuilder;
+
+  /// Controlador de sesión opcional (permite inyectarlo en pruebas).
+  final SessionController? sessionController;
 
   @override
   State<AntFishApp> createState() => _AntFishAppState();
 }
 
 class _AntFishAppState extends State<AntFishApp> {
-  late final SessionController _session = SessionController(
-    SecureTokenStorage(),
-  );
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  late final SessionController _session =
+      widget.sessionController ?? SessionController(SecureTokenStorage());
+  late final AuthRepository? _repository =
+      widget.authRepository ??
+      widget.authRepositoryBuilder?.call(_session, _handleUnauthorized);
+
+  void _handleUnauthorized() {
+    _navigatorKey.currentState?.pushNamedAndRemoveUntil(
+      AppRoutes.login,
+      (_) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: _navigatorKey,
       title: 'AntFish',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
@@ -49,10 +81,13 @@ class _AntFishAppState extends State<AntFishApp> {
             defaultValue: AppRoutes.login,
           ),
       onGenerateRoute: _onGenerateRoute,
-      builder: (context, child) => AuthScope(
-        repository: widget.authRepository,
-        session: _session,
-        child: child ?? const SizedBox.shrink(),
+      builder: (context, child) => SessionScope(
+        controller: _session,
+        child: AuthScope(
+          repository: _repository,
+          session: _session,
+          child: child ?? const SizedBox.shrink(),
+        ),
       ),
     );
   }
@@ -61,6 +96,12 @@ class _AntFishAppState extends State<AntFishApp> {
     final Widget page = switch (settings.name) {
       AppRoutes.register => const RegisterScreen(),
       AppRoutes.verifyEmail => VerifyEmailScreen(
+        email: settings.arguments as String?,
+      ),
+      AppRoutes.forgotPassword => ForgotPasswordScreen(
+        initialEmail: settings.arguments as String?,
+      ),
+      AppRoutes.resetPassword => ResetPasswordScreen(
         email: settings.arguments as String?,
       ),
       AppRoutes.home => const _AppShellHost(initialTab: AppTab.home),

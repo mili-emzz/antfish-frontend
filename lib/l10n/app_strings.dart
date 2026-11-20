@@ -62,6 +62,37 @@ abstract final class AppStrings {
   static const String verifyChangeEmail = 'Cambiar correo electrónico';
   static const String verifyTemplateNotice =
       'Vista de plantilla: la verificación y el reenvío se activarán al conectar el servidor.';
+  static const String verifySuccessDefault =
+      'Cuenta verificada exitosamente. Ya puedes iniciar sesión.';
+  static const String verifyResendDefault =
+      'Si la cuenta está pendiente de verificación, se envió un nuevo código.';
+  static String verifyResendCooldown(int seconds) =>
+      'Reenviar código (${seconds}s)';
+
+  // Recuperación de contraseña (POST /auth/password/forgot y /reset)
+  static const String forgotPasswordEyebrow = 'RECUPERACIÓN SEGURA';
+  static const String forgotPasswordTitle = 'Recupera tu contraseña';
+  static const String forgotPasswordSubtitle =
+      'Ingresa tu correo y te enviaremos un código de 6 dígitos para restablecerla.';
+  static const String forgotPasswordSubmit = 'Enviar código de recuperación';
+  static const String forgotPasswordBackToLogin = 'Volver a iniciar sesión';
+  static const String forgotPasswordSuccessDefault =
+      'Si el correo corresponde a una cuenta activa, recibirás un código de recuperación.';
+
+  static const String resetPasswordEyebrow = 'NUEVA CONTRASEÑA';
+  static const String resetPasswordTitle = 'Restablece tu acceso';
+  static const String resetPasswordSubtitlePrefix =
+      'Ingresa el código de 6 dígitos enviado a ';
+  static const String resetPasswordSubtitleFallback =
+      'Ingresa tu correo, el código de 6 dígitos y tu nueva contraseña.';
+  static const String resetPasswordCodeLabel = 'Código de recuperación';
+  static const String resetPasswordCodeSemantics =
+      'Código de recuperación de 6 dígitos';
+  static const String resetPasswordNewLabel = 'Nueva contraseña';
+  static const String resetPasswordSubmit = 'Restablecer contraseña';
+  static const String resetPasswordRequestAgain = 'Solicitar otro código';
+  static const String resetPasswordSuccessDefault =
+      'Contraseña restablecida exitosamente. Ya puedes iniciar sesión con tu nueva contraseña.';
 
   // Campos
   static const String fieldNameLabel = 'Nombre';
@@ -106,8 +137,12 @@ abstract final class AppStrings {
       'No se pudo obtener la credencial de Google.';
   static const String googleGenericError =
       'No se pudo iniciar sesión con Google. Inténtalo de nuevo.';
+  static const String googleWebUnsupported =
+      'El inicio con Google directo desde este botón requiere probar en Android/iOS o usar una sesión de Google activa en el navegador.';
   static const String serverInvalidResponse =
       'Respuesta inesperada del servidor.';
+  static const String authGenericError =
+      'No se pudo completar la operación. Inténtalo de nuevo.';
 
   // Estados de plantilla (sin backend)
   static const String templateBackendPending =
@@ -213,5 +248,20 @@ abstract final class AppStrings {
   static const String profilePreferencesSubtitle =
       'Conoce los términos del servicio';
   static const String profileLogout = 'Cerrar sesión';
+  static const String profileDeleteAccount = 'Eliminar cuenta';
+  static const String deleteAccountDialogTitle = 'Eliminar cuenta';
+  static const String deleteAccountDialogCopy =
+      'Esta acción es definitiva. Se anonimizará tu cuenta y se eliminará todo tu historial de análisis y métricas.';
+  static const String deleteAccountPasswordLabel = 'Contraseña actual';
+  static const String deleteAccountPasswordHint =
+      'Confirma tu contraseña para continuar';
+  static const String deleteAccountGoogleHint =
+      'Por seguridad, verifica nuevamente tu identidad con Google para confirmar la baja definitiva.';
+  static const String deleteAccountCancel = 'Cancelar';
+  static const String deleteAccountConfirm = 'Eliminar definitivamente';
+  static const String deleteAccountConfirmGoogle =
+      'Verificar con Google y eliminar';
+  static const String deleteAccountSuccess =
+      'Tu cuenta fue eliminada definitivamente.';
   static const String profileVersion = 'AntFish 1.0 · Tu escudo digital';
 }

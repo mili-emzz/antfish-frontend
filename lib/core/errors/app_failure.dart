@@ -46,6 +46,14 @@ final class ConflictFailure extends AppFailure {
   });
 }
 
+/// Datos enviados rechazados por el backend (HTTP 400 / 422).
+final class ValidationFailure extends AppFailure {
+  const ValidationFailure({
+    super.message = 'Los datos enviados no son válidos. Revisa el formulario.',
+    super.code = 'VALIDATION_ERROR',
+  });
+}
+
 /// Límite de tasa alcanzado (HTTP 429).
 final class RateLimitFailure extends AppFailure {
   const RateLimitFailure({

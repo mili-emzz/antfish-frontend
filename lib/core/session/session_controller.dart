@@ -13,25 +13,70 @@ class SessionController extends ChangeNotifier {
   SessionState _state = const SessionUnauthenticated();
   SessionState get state => _state;
 
+  /// Devuelve el `access_token` en memoria si la sesión está autenticada.
+  String? get accessToken => switch (_state) {
+    SessionAuthenticated(:final accessToken) => accessToken,
+    _ => null,
+  };
+
+  /// Lee el `refresh_token` persistido en almacenamiento seguro.
+  Future<String?> readRefreshToken() => _storage.readRefreshToken();
+
   Future<void> signIn({
     required String accessToken,
     required String refreshToken,
     String? userEmail,
+    String? userName,
     String authProvider = 'local',
   }) async {
     await _storage.saveRefreshToken(refreshToken);
     _state = SessionAuthenticated(
       accessToken: accessToken,
       userEmail: userEmail,
+      userName: userName,
       authProvider: authProvider,
     );
+    if (kDebugMode) {
+      debugPrint('[SESSION] Autenticada (provider: $authProvider)');
+    }
     notifyListeners();
   }
 
-  /// Logout local: no existe endpoint de revocación en el backend.
+  /// Actualiza el `access_token` en memoria tras un `POST /auth/refresh` exitoso.
+  void updateAccessToken(String newAccessToken) {
+    final current = _state;
+    if (current is SessionAuthenticated) {
+      _state = SessionAuthenticated(
+        accessToken: newAccessToken,
+        userEmail: current.userEmail,
+        userName: current.userName,
+        authProvider: current.authProvider,
+      );
+    } else {
+      _state = SessionAuthenticated(accessToken: newAccessToken);
+    }
+    if (kDebugMode) {
+      debugPrint('[SESSION] Access token renovado en memoria');
+    }
+    notifyListeners();
+  }
+
+  /// Cuenta registrada o sin verificar: se espera el código de 6 dígitos.
+  void markPendingVerification(String email) {
+    _state = SessionPendingVerification(email: email);
+    if (kDebugMode) {
+      debugPrint('[SESSION] Estado -> pendingVerification');
+    }
+    notifyListeners();
+  }
+
+  /// Logout local: limpia `refresh_token`, `access_token` y datos de usuario.
   Future<void> signOut() async {
     await _storage.clear();
     _state = const SessionUnauthenticated();
+    if (kDebugMode) {
+      debugPrint('[SESSION] Sesión cerrada y almacenamiento limpiado');
+    }
     notifyListeners();
   }
 }

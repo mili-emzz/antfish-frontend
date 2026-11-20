@@ -1,34 +1,89 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/session/session_scope.dart';
+import '../../../../core/session/session_state.dart';
 import '../../../../core/ui/theme/app_colors.dart';
 import '../../../../core/ui/theme/app_text_styles.dart';
+import '../../../../core/ui/widgets/app_alert.dart';
+import '../../../../core/ui/widgets/app_buttons.dart';
+import '../../../../core/ui/widgets/crystal_text_field.dart';
 import '../../../../core/ui/widgets/glass_panel.dart';
 import '../../../../core/ui/widgets/page_header.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../../auth/auth.dart';
 
 /// Pantalla de perfil y preferencias (`ProfileScreen` en App.tsx).
 ///
-/// PLANTILLA SIN BACKEND:
-/// - Los botones de configuración que dependen de servicios/subpantallas aún no
-///   conectados permanecen deshabilitados (`onTap: null`).
-/// - `Cerrar sesión` es una acción local en el cliente (AGENTS.md §7) que
-///   redirige a [AppRoutes.login].
+/// - `Cerrar sesión` limpia tokens locales (AGENTS.md §7) y redirige a Login.
+/// - `Eliminar cuenta` ejecuta baja definitiva con reautenticación obligatoria
+///   (`DELETE /api/v1/auth/me`) cuando existe repositorio en [AuthScope].
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key, this.onLogout});
 
   final VoidCallback? onLogout;
 
-  void _handleLogout(BuildContext context) {
+  Future<void> _handleLogout(BuildContext context) async {
+    final navigator = Navigator.of(context);
+    await SessionScope.maybeOf(context)?.signOut();
     if (onLogout != null) {
       onLogout!();
       return;
     }
-    Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+    navigator.pushReplacementNamed(AppRoutes.login);
+  }
+
+  Future<void> _openDeleteAccountDialog(
+    BuildContext context, {
+    required String authProvider,
+  }) async {
+    final deletedMessage = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _DeleteAccountDialog(authProvider: authProvider),
+    );
+    if (deletedMessage == null || !context.mounted) return;
+    showAppSnackBar(context, deletedMessage);
+    if (onLogout != null) {
+      onLogout!();
+      return;
+    }
+    Navigator.of(context)
+        .pushNamedAndRemoveUntil(AppRoutes.login, (_) => false);
+  }
+
+  static String _initialsFor(String name) {
+    final parts = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((p) => p.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return AppStrings.homeAvatarInitials;
+    if (parts.length == 1) {
+      final first = parts.first;
+      return first.substring(0, first.length >= 2 ? 2 : 1).toUpperCase();
+    }
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
   }
 
   @override
   Widget build(BuildContext context) {
+    final hasBackend = AuthScope.maybeOf(context)?.repository != null;
+    final sessionState = SessionScope.maybeOf(context)?.state;
+    final authState = sessionState is SessionAuthenticated
+        ? sessionState
+        : null;
+    final authProvider = authState?.authProvider ?? 'local';
+    final displayName = (authState?.userName?.trim().isNotEmpty ?? false)
+        ? authState!.userName!.trim()
+        : AppStrings.profileDemoName;
+    final displayEmail = (authState?.userEmail?.trim().isNotEmpty ?? false)
+        ? authState!.userEmail!.trim()
+        : AppStrings.profileDemoEmail;
+    final initials = (authState?.userName?.trim().isNotEmpty ?? false)
+        ? _initialsFor(displayName)
+        : AppStrings.homeAvatarInitials;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
@@ -56,10 +111,10 @@ class ProfileScreen extends StatelessWidget {
                     colors: [Color(0x29D7BA89), Color(0x1FB47EB3)],
                   ),
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
-                    AppStrings.homeAvatarInitials,
-                    style: TextStyle(
+                    initials,
+                    style: const TextStyle(
                       fontFamily: AppTextStyles.display,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -74,9 +129,9 @@ class ProfileScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      AppStrings.profileDemoName,
-                      style: TextStyle(
+                    Text(
+                      displayName,
+                      style: const TextStyle(
                         fontFamily: AppTextStyles.display,
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -84,9 +139,9 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 3),
-                    const Text(
-                      AppStrings.profileDemoEmail,
-                      style: TextStyle(
+                    Text(
+                      displayEmail,
+                      style: const TextStyle(
                         fontFamily: AppTextStyles.body,
                         fontSize: 10,
                         color: Color(0xFF8B7F8F),
@@ -197,7 +252,20 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10),
+        // Acción destructiva: baja definitiva (DELETE /api/v1/auth/me)
+        Center(
+          child: LinkButton(
+            label: AppStrings.profileDeleteAccount,
+            onPressed: hasBackend
+                ? () => _openDeleteAccountDialog(
+                    context,
+                    authProvider: authProvider,
+                  )
+                : null,
+          ),
+        ),
+        const SizedBox(height: 10),
         const Text(
           AppStrings.profileVersion,
           textAlign: TextAlign.center,
@@ -208,6 +276,158 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _DeleteAccountDialog extends StatefulWidget {
+  const _DeleteAccountDialog({required this.authProvider});
+
+  final String authProvider;
+
+  @override
+  State<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _passwordController = TextEditingController();
+  bool _isSubmitting = false;
+  String? _errorMessage;
+
+  bool get _isGoogle => widget.authProvider == 'google';
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _confirm() async {
+    if (_isSubmitting) return;
+    FocusScope.of(context).unfocus();
+
+    if (!_isGoogle && !(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
+
+    final result = _isGoogle
+        ? await runDeleteAccountWithGoogle(context)
+        : await runDeleteAccountWithPassword(
+            context,
+            password: _passwordController.text,
+          );
+    if (!mounted) return;
+
+    switch (result) {
+      case AuthMessageSuccess(:final message):
+        Navigator.of(context).pop(message);
+        return;
+      case AuthCancelled():
+        setState(() => _isSubmitting = false);
+      case AuthError(:final message):
+        setState(() {
+          _isSubmitting = false;
+          _errorMessage = message;
+        });
+      default:
+        setState(() {
+          _isSubmitting = false;
+          _errorMessage = AppStrings.templateBackendPending;
+        });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: GlassPanel(
+          borderRadius: 22,
+          padding: const EdgeInsets.all(24),
+          elevated: true,
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    AppStrings.deleteAccountDialogTitle,
+                    style: TextStyle(
+                      fontFamily: AppTextStyles.display,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textLight,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    AppStrings.deleteAccountDialogCopy,
+                    style: AppTextStyles.bodyMuted,
+                  ),
+                  const SizedBox(height: 16),
+                  if (_errorMessage != null) ...[
+                    AppAlert(
+                      message: _errorMessage!,
+                      variant: AlertVariant.error,
+                      onDismiss: () => setState(() => _errorMessage = null),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  if (_isGoogle)
+                    const Text(
+                      AppStrings.deleteAccountGoogleHint,
+                      style: AppTextStyles.fieldHelper,
+                    )
+                  else
+                    CrystalTextField(
+                      label: AppStrings.deleteAccountPasswordLabel,
+                      hint: AppStrings.deleteAccountPasswordHint,
+                      icon: Icons.lock_outline_rounded,
+                      controller: _passwordController,
+                      enabled: !_isSubmitting,
+                      isPassword: true,
+                      textInputAction: TextInputAction.done,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return AppStrings.validationPasswordRequired;
+                        }
+                        return null;
+                      },
+                      onFieldSubmitted: (_) => _confirm(),
+                    ),
+                  const SizedBox(height: 20),
+                  PrimaryButton(
+                    label: _isGoogle
+                        ? AppStrings.deleteAccountConfirmGoogle
+                        : AppStrings.deleteAccountConfirm,
+                    icon: Icons.delete_forever_outlined,
+                    isLoading: _isSubmitting,
+                    onPressed: _confirm,
+                  ),
+                  const SizedBox(height: 10),
+                  SecondaryButton(
+                    label: AppStrings.deleteAccountCancel,
+                    onPressed: _isSubmitting
+                        ? null
+                        : () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

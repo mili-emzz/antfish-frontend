@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../../core/config/env_config.dart';
@@ -13,15 +14,22 @@ class GoogleAuthDataSource {
   Future<void>? _initialization;
 
   Future<void> _ensureInitialized() {
-    // `serverClientId` = Web Client ID: es el `aud` que valida el backend.
-    // `clientId` = Android/iOS Client ID según plataforma.
+    // En Web `serverClientId` no está soportado y `clientId` debe ser el Web Client ID.
+    // En Android/iOS `serverClientId` es el Web Client ID (el `aud` del backend).
+    final String? clientId = kIsWeb
+        ? (EnvConfig.googleWebClientId.isEmpty
+              ? null
+              : EnvConfig.googleWebClientId)
+        : (EnvConfig.googleAndroidClientId.isEmpty
+              ? null
+              : EnvConfig.googleAndroidClientId);
+    final String? serverClientId = kIsWeb || EnvConfig.googleWebClientId.isEmpty
+        ? null
+        : EnvConfig.googleWebClientId;
+
     return _initialization ??= _googleSignIn.initialize(
-      clientId: EnvConfig.googleAndroidClientId.isEmpty
-          ? null
-          : EnvConfig.googleAndroidClientId,
-      serverClientId: EnvConfig.googleWebClientId.isEmpty
-          ? null
-          : EnvConfig.googleWebClientId,
+      clientId: clientId,
+      serverClientId: serverClientId,
     );
   }
 
@@ -29,7 +37,26 @@ class GoogleAuthDataSource {
   Future<String?> obtainIdToken() async {
     try {
       await _ensureInitialized();
-      final account = await _googleSignIn.authenticate();
+      if (kDebugMode) {
+        debugPrint(
+          '[AUTH] GoogleSignIn inicializado (web: $kIsWeb, '
+          'supportsAuthenticate: ${_googleSignIn.supportsAuthenticate()})',
+        );
+      }
+
+      GoogleSignInAccount? account;
+      if (_googleSignIn.supportsAuthenticate()) {
+        account = await _googleSignIn.authenticate();
+      } else {
+        account = await _googleSignIn.attemptLightweightAuthentication();
+        if (account == null) {
+          throw const UnknownFailure(
+            message: AppStrings.googleWebUnsupported,
+            code: 'GOOGLE_WEB_UNSUPPORTED',
+          );
+        }
+      }
+
       final idToken = account.authentication.idToken;
       if (idToken == null || idToken.isEmpty) {
         throw const UnauthorizedFailure(
@@ -37,11 +64,22 @@ class GoogleAuthDataSource {
           code: 'GOOGLE_NO_ID_TOKEN',
         );
       }
+      if (kDebugMode) {
+        debugPrint(
+          '[AUTH] GoogleSignIn obtuvo id_token (no registrado en log)',
+        );
+      }
       return idToken;
     } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled ||
           e.code == GoogleSignInExceptionCode.interrupted) {
+        if (kDebugMode) {
+          debugPrint('[AUTH] GoogleSignIn cancelado por el usuario');
+        }
         return null;
+      }
+      if (kDebugMode) {
+        debugPrint('[AUTH] GoogleSignInException (${e.code.name})');
       }
       throw UnknownFailure(
         message: AppStrings.googleGenericError,
