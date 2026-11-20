@@ -6,58 +6,79 @@ import '../../../../core/ui/theme/app_text_styles.dart';
 import '../../../../core/ui/widgets/glass_panel.dart';
 import '../../../../core/ui/widgets/page_header.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../domain/models/user_metrics.dart';
 
-/// Pantalla de métricas de protección (`StatsScreen` en App.tsx).
+/// Pantalla de métricas de protección (`StatsScreen`), alineada con el esquema
+/// de `GET /api/v1/metrics/me` (`docs/contrato_api_v2.md` §3) sin valores mock.
 class StatsScreen extends StatelessWidget {
-  const StatsScreen({super.key});
+  const StatsScreen({super.key, this.metrics = UserMetrics.empty});
 
-  static const List<_MetricItemData> _metrics = [
-    _MetricItemData(
-      icon: Icons.center_focus_strong_outlined,
-      value: '148',
-      label: AppStrings.statsMetricTotalScans,
-      sublabel: AppStrings.statsMetricTotalScansSub,
-    ),
-    _MetricItemData(
-      icon: Icons.verified_user_outlined,
-      value: '23',
-      label: AppStrings.statsMetricBlocked,
-      sublabel: AppStrings.statsMetricBlockedSub,
-    ),
-    _MetricItemData(
-      icon: Icons.link_rounded,
-      value: '91',
-      label: AppStrings.statsMetricUrls,
-      sublabel: AppStrings.statsMetricUrlsSub,
-    ),
-    _MetricItemData(
-      icon: Icons.chat_bubble_outline_rounded,
-      value: '57',
-      label: AppStrings.statsMetricSms,
-      sublabel: AppStrings.statsMetricSmsSub,
-    ),
-  ];
+  final UserMetrics metrics;
 
-  static const List<_BreakdownRowData> _breakdown = [
+  static String _formatLastUpdated(DateTime? date) {
+    if (date == null) return AppStrings.statsNoScansYet;
+    final local = date.toLocal();
+    final day = local.day.toString().padLeft(2, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    final year = local.year.toString();
+    final hour = local.hour.toString().padLeft(2, '0');
+    final minute = local.minute.toString().padLeft(2, '0');
+    return AppStrings.statsLastUpdated('$day/$month/$year $hour:$minute');
+  }
+
+  List<_MetricItemData> get _metricCards {
+    final blockedPct = metrics.percentOfTotal(metrics.amenazasBloqueadas);
+    final urlPct = metrics.percentOfTotal(metrics.totalUrl);
+    final smsPct = metrics.percentOfTotal(metrics.totalSms);
+
+    return [
+      _MetricItemData(
+        icon: Icons.center_focus_strong_outlined,
+        value: '${metrics.totalEscaneos}',
+        label: AppStrings.statsMetricTotalScans,
+        sublabel: AppStrings.statsMetricTotalScansSub,
+      ),
+      _MetricItemData(
+        icon: Icons.verified_user_outlined,
+        value: '${metrics.amenazasBloqueadas}',
+        label: AppStrings.statsMetricBlocked,
+        sublabel: AppStrings.statsPercentOfTotal(blockedPct),
+      ),
+      _MetricItemData(
+        icon: Icons.link_rounded,
+        value: '${metrics.totalUrl}',
+        label: AppStrings.statsMetricUrls,
+        sublabel: AppStrings.statsPercentOfActivity(urlPct),
+      ),
+      _MetricItemData(
+        icon: Icons.chat_bubble_outline_rounded,
+        value: '${metrics.totalSms}',
+        label: AppStrings.statsMetricSms,
+        sublabel: AppStrings.statsPercentOfActivity(smsPct),
+      ),
+    ];
+  }
+
+  List<_BreakdownRowData> get _breakdownRows => [
     _BreakdownRowData(
-      label: AppStrings.statsRiskSafe,
-      percent: 71,
+      label: AppStrings.statsRiskSafeOrMedium,
+      percent: metrics.percentOfTotal(metrics.escaneosSinAmenazaCritica),
       color: AppColors.riskSafe,
     ),
     _BreakdownRowData(
-      label: AppStrings.statsRiskMedium,
-      percent: 19,
-      color: AppColors.riskMedium,
-    ),
-    _BreakdownRowData(
-      label: AppStrings.statsRiskHigh,
-      percent: 7,
-      color: AppColors.riskHigh,
-    ),
-    _BreakdownRowData(
-      label: AppStrings.statsRiskCritical,
-      percent: 3,
+      label: AppStrings.statsRiskBlockedThreats,
+      percent: metrics.percentOfTotal(metrics.amenazasBloqueadas),
       color: AppColors.riskCritical,
+    ),
+    _BreakdownRowData(
+      label: AppStrings.statsBreakdownUrls,
+      percent: metrics.percentOfTotal(metrics.totalUrl),
+      color: AppColors.gold,
+    ),
+    _BreakdownRowData(
+      label: AppStrings.statsBreakdownSms,
+      percent: metrics.percentOfTotal(metrics.totalSms),
+      color: AppColors.lilac,
     ),
   ];
 
@@ -65,6 +86,9 @@ class StatsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenSize = ScreenSize.of(context);
     final bool isExpanded = screenSize.isExpanded;
+    final cards = _metricCards;
+    final breakdown = _breakdownRows;
+    final periodLabel = _formatLastUpdated(metrics.ultimaActualizacion);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -79,9 +103,9 @@ class StatsScreen extends StatelessWidget {
         if (isExpanded)
           Row(
             children: [
-              for (var i = 0; i < _metrics.length; i++) ...[
+              for (var i = 0; i < cards.length; i++) ...[
                 if (i > 0) const SizedBox(width: 12),
-                Expanded(child: _MetricCard(data: _metrics[i])),
+                Expanded(child: _MetricCard(data: cards[i])),
               ],
             ],
           )
@@ -90,17 +114,17 @@ class StatsScreen extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Expanded(child: _MetricCard(data: _metrics[0])),
+                  Expanded(child: _MetricCard(data: cards[0])),
                   const SizedBox(width: 12),
-                  Expanded(child: _MetricCard(data: _metrics[1])),
+                  Expanded(child: _MetricCard(data: cards[1])),
                 ],
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Expanded(child: _MetricCard(data: _metrics[2])),
+                  Expanded(child: _MetricCard(data: cards[2])),
                   const SizedBox(width: 12),
-                  Expanded(child: _MetricCard(data: _metrics[3])),
+                  Expanded(child: _MetricCard(data: cards[3])),
                 ],
               ),
             ],
@@ -115,13 +139,13 @@ class StatsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Wrap(
+              Wrap(
                 alignment: WrapAlignment.spaceBetween,
                 crossAxisAlignment: WrapCrossAlignment.end,
                 spacing: 8,
                 runSpacing: 6,
                 children: [
-                  Column(
+                  const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -143,8 +167,8 @@ class StatsScreen extends StatelessWidget {
                     ],
                   ),
                   Text(
-                    AppStrings.statsBreakdownPeriod,
-                    style: TextStyle(
+                    periodLabel,
+                    style: const TextStyle(
                       fontFamily: AppTextStyles.body,
                       fontSize: 9,
                       color: Color(0xFF756B79),
@@ -153,7 +177,7 @@ class StatsScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 20),
-              for (final row in _breakdown)
+              for (final row in breakdown)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 6.5),
                   child: _ThreatBreakdownBar(data: row),
@@ -272,7 +296,7 @@ class _ThreatBreakdownBar extends StatelessWidget {
     return Row(
       children: [
         SizedBox(
-          width: 85,
+          width: 115,
           child: Text(
             data.label,
             maxLines: 1,

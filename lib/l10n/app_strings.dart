@@ -209,7 +209,7 @@ abstract final class AppStrings {
   static const String historyFilterUrls = 'Enlaces';
   static const String historyFilterSms = 'Mensajes';
 
-  // Métricas (StatsScreen)
+  // Métricas (StatsScreen - GET /api/v1/metrics/me)
   static const String statsEyebrow = 'TU IMPACTO';
   static const String statsTitle = 'Métricas de protección';
   static const String statsCopy =
@@ -218,18 +218,19 @@ abstract final class AppStrings {
   static const String statsMetricTotalScans = 'Escaneos totales';
   static const String statsMetricTotalScansSub = 'Histórico acumulado';
   static const String statsMetricBlocked = 'Amenazas bloqueadas';
-  static const String statsMetricBlockedSub = '15.5% del total';
   static const String statsMetricUrls = 'Enlaces analizados';
-  static const String statsMetricUrlsSub = '61% de actividad';
   static const String statsMetricSms = 'SMS analizados';
-  static const String statsMetricSmsSub = '39% de actividad';
+  static String statsPercentOfTotal(int percent) => '$percent% del total';
+  static String statsPercentOfActivity(int percent) => '$percent% de actividad';
   static const String statsBreakdownEyebrow = 'DESGLOSE';
   static const String statsBreakdownTitle = 'Nivel de riesgo';
-  static const String statsBreakdownPeriod = 'Historial completo';
-  static const String statsRiskSafe = 'Seguro';
-  static const String statsRiskMedium = 'Riesgo medio';
-  static const String statsRiskHigh = 'Riesgo alto';
-  static const String statsRiskCritical = 'Crítico';
+  static const String statsNoScansYet = 'Sin escaneos registrados';
+  static String statsLastUpdated(String formattedDate) =>
+      'Actualizado: $formattedDate';
+  static const String statsRiskSafeOrMedium = 'Seguro / precaución';
+  static const String statsRiskBlockedThreats = 'Amenazas (alto / crítico)';
+  static const String statsBreakdownUrls = 'Enlaces URL';
+  static const String statsBreakdownSms = 'Mensajes SMS';
   static const String statsPersistenceNote =
       'Eliminar un análisis del historial no reduce los contadores históricos.';
 
