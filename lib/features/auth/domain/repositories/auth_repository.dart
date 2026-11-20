@@ -30,4 +30,21 @@ abstract interface class AuthRepository {
   ///
   /// Devuelve `null` si el usuario cancela el selector de cuentas.
   Future<AuthSession?> signInWithGoogle();
+
+  /// Solicita un código de recuperación de 6 dígitos (`POST /auth/password/forgot`).
+  Future<String> requestPasswordReset({required String email});
+
+  /// Restablece la contraseña con el código recibido (`POST /auth/password/reset`).
+  Future<String> confirmPasswordReset({
+    required String email,
+    required String code,
+    required String newPassword,
+  });
+
+  /// Baja definitiva de cuenta local con reautenticación (`DELETE /auth/me`).
+  Future<void> deleteAccountWithPassword({required String password});
+
+  /// Baja definitiva de cuenta Google reautenticando con un nuevo ID Token
+  /// (`DELETE /auth/me`). Devuelve `false` si el usuario cancela Google.
+  Future<bool> deleteAccountWithGoogle();
 }

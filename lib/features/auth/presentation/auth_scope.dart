@@ -216,3 +216,106 @@ Future<AuthAttemptResult> runResendCode(
     return const AuthError(AppStrings.authGenericError);
   }
 }
+
+/// Solicitud de código de recuperación (`POST /auth/password/forgot`).
+Future<AuthAttemptResult> runRequestPasswordReset(
+  BuildContext context, {
+  required String email,
+}) async {
+  final scope = AuthScope.maybeOf(context);
+  final repository = scope?.repository;
+  if (scope == null || repository == null) return const AuthUnavailable();
+
+  if (kDebugMode) debugPrint('[AUTH] Solicitando código de recuperación');
+  try {
+    final message = await repository.requestPasswordReset(email: email);
+    if (kDebugMode) {
+      debugPrint(
+        '[AUTH] Solicitud de recuperación aceptada -> /reset-password',
+      );
+    }
+    return AuthMessageSuccess(message);
+  } on AppFailure catch (f) {
+    if (kDebugMode) debugPrint('[AUTH] Forgot password falló (${f.code})');
+    return AuthError(f.message);
+  } catch (_) {
+    return const AuthError(AppStrings.authGenericError);
+  }
+}
+
+/// Confirmación de nueva contraseña (`POST /auth/password/reset`).
+Future<AuthAttemptResult> runConfirmPasswordReset(
+  BuildContext context, {
+  required String email,
+  required String code,
+  required String newPassword,
+}) async {
+  final scope = AuthScope.maybeOf(context);
+  final repository = scope?.repository;
+  if (scope == null || repository == null) return const AuthUnavailable();
+
+  if (kDebugMode) debugPrint('[AUTH] Restableciendo contraseña con código');
+  try {
+    final message = await repository.confirmPasswordReset(
+      email: email,
+      code: code,
+      newPassword: newPassword,
+    );
+    await scope.session.signOut();
+    if (kDebugMode) debugPrint('[AUTH] Contraseña restablecida -> /login');
+    return AuthMessageSuccess(message);
+  } on AppFailure catch (f) {
+    if (kDebugMode) debugPrint('[AUTH] Reset password falló (${f.code})');
+    return AuthError(f.message);
+  } catch (_) {
+    return const AuthError(AppStrings.authGenericError);
+  }
+}
+
+/// Baja definitiva de cuenta local (`DELETE /auth/me` con contraseña).
+Future<AuthAttemptResult> runDeleteAccountWithPassword(
+  BuildContext context, {
+  required String password,
+}) async {
+  final scope = AuthScope.maybeOf(context);
+  final repository = scope?.repository;
+  if (scope == null || repository == null) return const AuthUnavailable();
+
+  if (kDebugMode) debugPrint('[AUTH] Eliminando cuenta con contraseña');
+  try {
+    await repository.deleteAccountWithPassword(password: password);
+    await scope.session.signOut();
+    if (kDebugMode) debugPrint('[AUTH] Cuenta eliminada -> /login');
+    return const AuthMessageSuccess(AppStrings.deleteAccountSuccess);
+  } on AppFailure catch (f) {
+    if (kDebugMode) debugPrint('[AUTH] Eliminar cuenta falló (${f.code})');
+    return AuthError(f.message);
+  } catch (_) {
+    return const AuthError(AppStrings.authGenericError);
+  }
+}
+
+/// Baja definitiva de cuenta Google (`DELETE /auth/me` con `id_token`).
+Future<AuthAttemptResult> runDeleteAccountWithGoogle(
+  BuildContext context,
+) async {
+  final scope = AuthScope.maybeOf(context);
+  final repository = scope?.repository;
+  if (scope == null || repository == null) return const AuthUnavailable();
+
+  if (kDebugMode) debugPrint('[AUTH] Eliminando cuenta con Google');
+  try {
+    final deleted = await repository.deleteAccountWithGoogle();
+    if (!deleted) return const AuthCancelled();
+    await scope.session.signOut();
+    if (kDebugMode) debugPrint('[AUTH] Cuenta Google eliminada -> /login');
+    return const AuthMessageSuccess(AppStrings.deleteAccountSuccess);
+  } on AppFailure catch (f) {
+    if (kDebugMode) {
+      debugPrint('[AUTH] Eliminar cuenta Google falló (${f.code})');
+    }
+    return AuthError(f.message);
+  } catch (_) {
+    return const AuthError(AppStrings.googleGenericError);
+  }
+}

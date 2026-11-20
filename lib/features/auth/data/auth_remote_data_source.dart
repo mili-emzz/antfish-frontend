@@ -110,6 +110,58 @@ class AuthRemoteDataSource {
     }
   }
 
+  /// `POST /auth/password/forgot` con `{ "email": ... }`.
+  Future<String> requestPasswordReset({required String email}) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/auth/password/forgot',
+        data: {'email': normalizeEmail(email)},
+      );
+      final msg = response.data?['mensaje'];
+      return msg is String && msg.isNotEmpty
+          ? msg
+          : AppStrings.forgotPasswordSuccessDefault;
+    } on DioException catch (e) {
+      throw ErrorMapper.fromDio(e);
+    }
+  }
+
+  /// `POST /auth/password/reset` con `{ "email", "codigo", "nueva_password" }`.
+  Future<String> confirmPasswordReset({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/auth/password/reset',
+        data: {
+          'email': normalizeEmail(email),
+          'codigo': code.trim(),
+          'nueva_password': newPassword,
+        },
+      );
+      final msg = response.data?['mensaje'];
+      return msg is String && msg.isNotEmpty
+          ? msg
+          : AppStrings.resetPasswordSuccessDefault;
+    } on DioException catch (e) {
+      throw ErrorMapper.fromDio(e);
+    }
+  }
+
+  /// `DELETE /auth/me` con reautenticación obligatoria (`password` o `id_token`).
+  Future<void> deleteAccount({String? password, String? idToken}) async {
+    try {
+      await _dio.delete<void>(
+        '/auth/me',
+        data: {'password': ?password, 'id_token': ?idToken},
+      );
+    } on DioException catch (e) {
+      throw ErrorMapper.fromDio(e);
+    }
+  }
+
   RegisterResult _parseRegister(Map<String, dynamic>? json) {
     final id = json?['id'];
     final email = json?['email'];

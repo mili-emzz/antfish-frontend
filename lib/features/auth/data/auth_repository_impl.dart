@@ -38,4 +38,32 @@ class AuthRepositoryImpl implements AuthRepository {
     // El id_token solo vive en esta variable local y se descarta al terminar.
     return _remote.loginWithGoogle(idToken);
   }
+
+  @override
+  Future<String> requestPasswordReset({required String email}) =>
+      _remote.requestPasswordReset(email: email);
+
+  @override
+  Future<String> confirmPasswordReset({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) => _remote.confirmPasswordReset(
+    email: email,
+    code: code,
+    newPassword: newPassword,
+  );
+
+  @override
+  Future<void> deleteAccountWithPassword({required String password}) =>
+      _remote.deleteAccount(password: password);
+
+  @override
+  Future<bool> deleteAccountWithGoogle() async {
+    final idToken = await _google.obtainIdToken();
+    if (idToken == null) return false; // El usuario canceló.
+    // El id_token solo vive en esta variable local y se descarta al terminar.
+    await _remote.deleteAccount(idToken: idToken);
+    return true;
+  }
 }

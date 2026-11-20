@@ -98,6 +98,12 @@ class _AntFishAppState extends State<AntFishApp> {
       AppRoutes.verifyEmail => VerifyEmailScreen(
         email: settings.arguments as String?,
       ),
+      AppRoutes.forgotPassword => ForgotPasswordScreen(
+        initialEmail: settings.arguments as String?,
+      ),
+      AppRoutes.resetPassword => ResetPasswordScreen(
+        email: settings.arguments as String?,
+      ),
       AppRoutes.home => const _AppShellHost(initialTab: AppTab.home),
       AppRoutes.history => const _AppShellHost(initialTab: AppTab.history),
       AppRoutes.stats => const _AppShellHost(initialTab: AppTab.stats),

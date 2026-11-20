@@ -156,12 +156,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 autofillHints: const [AutofillHints.password],
                 validator: AuthValidators.loginPassword,
               ),
-              const Align(
+              Align(
                 alignment: Alignment.centerRight,
                 child: LinkButton(
                   label: AppStrings.loginForgotPassword,
-                  // Deshabilitado hasta conectar POST /api/v1/auth/password/forgot.
-                  onPressed: null,
+                  onPressed: hasBackend && !_isSubmitting
+                      ? () => Navigator.of(context).pushNamed(
+                          AppRoutes.forgotPassword,
+                          arguments: _emailController.text.trim(),
+                        )
+                      : null,
                 ),
               ),
               const SizedBox(height: 6),
