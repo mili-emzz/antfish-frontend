@@ -1,11 +1,11 @@
 {
-    "name": "antfish",
-    "short_name": "antfish",
+    "name": "AntFish",
+    "short_name": "AntFish",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#110816",
+    "theme_color": "#110816",
+    "description": "AntFish - Detección inteligente de phishing y smishing.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

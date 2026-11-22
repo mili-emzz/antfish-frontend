@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/config/legal_links.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/session/session_scope.dart';
 import '../../../../core/session/session_state.dart';
@@ -188,8 +189,8 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 15),
-        // .settings-list (deshabilitados mientras no haya backend)
-        const GlassPanel(
+        // .settings-list
+        GlassPanel(
           borderRadius: 21,
           padding: EdgeInsets.zero,
           elevated: true,
@@ -201,18 +202,24 @@ class ProfileScreen extends StatelessWidget {
                 title: AppStrings.profileSecurityTitle,
                 subtitle: AppStrings.profileSecuritySubtitle,
                 showDivider: true,
+                onTap: () => Navigator.of(context).pushNamed(
+                  AppRoutes.forgotPassword,
+                  arguments: authState?.userEmail?.trim(),
+                ),
               ),
               _SettingsRow(
                 icon: Icons.fingerprint_rounded,
                 title: AppStrings.profilePrivacyTitle,
                 subtitle: AppStrings.profilePrivacySubtitle,
                 showDivider: true,
+                onTap: () => LegalLinks.openPrivacy(context),
               ),
               _SettingsRow(
                 icon: Icons.auto_awesome_outlined,
                 title: AppStrings.profilePreferencesTitle,
                 subtitle: AppStrings.profilePreferencesSubtitle,
                 showDivider: false,
+                onTap: () => LegalLinks.openTerms(context),
               ),
             ],
           ),
@@ -438,72 +445,84 @@ class _SettingsRow extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.showDivider,
+    this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
   final bool showDivider;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
+    final enabled = onTap != null;
+
     return Semantics(
       button: true,
-      enabled: false,
+      enabled: enabled,
       label: '$title. $subtitle',
       child: Opacity(
-        opacity: 0.65,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 17),
-          decoration: BoxDecoration(
-            border: showDivider
-                ? const Border(bottom: BorderSide(color: Color(0x0FFFFFFF)))
-                : null,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: const Color(0x14D7BA89),
-                  borderRadius: BorderRadius.circular(11),
-                ),
-                child: Icon(icon, size: 20, color: AppColors.gold),
+        opacity: enabled ? 1.0 : 0.65,
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            onTap: onTap,
+            splashColor: const Color(0x1FD7BA89),
+            highlightColor: const Color(0x0FFFFFFF),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 17),
+              decoration: BoxDecoration(
+                border: showDivider
+                    ? const Border(bottom: BorderSide(color: Color(0x0FFFFFFF)))
+                    : null,
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontFamily: AppTextStyles.body,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textLight,
-                      ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: const Color(0x14D7BA89),
+                      borderRadius: BorderRadius.circular(11),
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        fontFamily: AppTextStyles.body,
-                        fontSize: 12,
-                        color: AppColors.muted,
-                      ),
+                    child: Icon(icon, size: 20, color: AppColors.gold),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontFamily: AppTextStyles.body,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textLight,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          subtitle,
+                          style: const TextStyle(
+                            fontFamily: AppTextStyles.body,
+                            fontSize: 12,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 18,
+                    color: enabled ? AppColors.muted : const Color(0xFF605665),
+                  ),
+                ],
               ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                size: 18,
-                color: Color(0xFF605665),
-              ),
-            ],
+            ),
           ),
         ),
       ),

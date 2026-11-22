@@ -125,6 +125,42 @@ void main() {
       expect(find.text(AppStrings.googleInvalidCredential), findsNothing);
     });
 
+    testWidgets(
+      'Google Sign-In en Registro funciona sin marcar checkboxes y muestra aviso legal',
+      (tester) async {
+        when(() => repository.signInWithGoogle()).thenAnswer(
+          (_) async => const AuthSession(
+            accessToken: 'jwt_access',
+            refreshToken: 'jwt_refresh',
+            email: 'nuevo@antfish.app',
+            proveedorAuth: 'google',
+          ),
+        );
+
+        await tester.pumpWidget(
+          _wrapWithAuth(
+            repository: repository,
+            session: session,
+            child: const RegisterScreen(),
+          ),
+        );
+
+        expect(find.text(AppStrings.authLegalGooglePrefix), findsOneWidget);
+        expect(find.text(AppStrings.authLegalTerms), findsOneWidget);
+        expect(find.text(AppStrings.authLegalAnd), findsOneWidget);
+        expect(find.text(AppStrings.authLegalPrivacy), findsOneWidget);
+
+        final googleBtn = find.text(AppStrings.authGoogle);
+        await tester.ensureVisible(googleBtn);
+        await tester.tap(googleBtn);
+        await tester.pumpAndSettle();
+
+        verify(() => repository.signInWithGoogle()).called(1);
+        expect(find.text('ROUTE:/home:null'), findsOneWidget);
+        expect(session.state, isA<SessionAuthenticated>());
+      },
+    );
+
     testWidgets('error 409 muestra aviso de correo no verificado en Registro', (
       tester,
     ) async {

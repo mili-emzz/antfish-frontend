@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/config/legal_links.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/ui/widgets/app_alert.dart';
 import '../../../../core/ui/widgets/app_buttons.dart';
@@ -10,6 +11,7 @@ import '../validators/auth_validators.dart';
 import '../widgets/auth_form_footer.dart';
 import '../widgets/auth_mode_tabs.dart';
 import '../widgets/auth_scaffold.dart';
+import '../widgets/legal_consent_checkboxes.dart';
 
 /// Pantalla de registro local con nombre, correo y contraseña (CU-13, RF-06.1)
 /// y autenticación con Google (RF-06.4).
@@ -29,8 +31,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordFocus = FocusNode();
 
   bool _isSubmitting = false;
+  bool _acceptedTerms = false;
+  bool _acceptedPrivacy = false;
   String? _alertMessage;
   AlertVariant _alertVariant = AlertVariant.info;
+
+  bool get _hasAcceptedLegal => _acceptedTerms && _acceptedPrivacy;
 
   @override
   void dispose() {
@@ -83,6 +89,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _submit() async {
     if (_isSubmitting) return;
     FocusScope.of(context).unfocus();
+
+    if (!_hasAcceptedLegal) {
+      setState(() {
+        _alertMessage = AppStrings.validationLegalRequired;
+        _alertVariant = AlertVariant.warning;
+      });
+      return;
+    }
 
     if (!(_formKey.currentState?.validate() ?? false)) {
       setState(() {
@@ -187,11 +201,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   autofillHints: const [AutofillHints.newPassword],
                   validator: AuthValidators.newPassword,
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: 16),
+                LegalConsentCheckboxes(
+                  acceptedTerms: _acceptedTerms,
+                  acceptedPrivacy: _acceptedPrivacy,
+                  enabled: !_isSubmitting,
+                  onTermsChanged: (value) =>
+                      setState(() => _acceptedTerms = value),
+                  onPrivacyChanged: (value) =>
+                      setState(() => _acceptedPrivacy = value),
+                  onOpenTerms: () => LegalLinks.openTerms(context),
+                  onOpenPrivacy: () => LegalLinks.openPrivacy(context),
+                ),
+                const SizedBox(height: 18),
                 PrimaryButton(
                   label: AppStrings.registerSubmit,
                   isLoading: _isSubmitting,
-                  onPressed: hasBackend ? _submit : null,
+                  onPressed: hasBackend && _hasAcceptedLegal ? _submit : null,
                 ),
                 const SizedBox(height: 14),
                 const AuthPrivacyNote(),

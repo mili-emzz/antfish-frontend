@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:antfish/core/config/legal_links.dart';
 import 'package:antfish/core/errors/app_failure.dart';
 import 'package:antfish/core/session/session_controller.dart';
 import 'package:antfish/core/session/session_state.dart';
@@ -10,6 +11,7 @@ import 'package:antfish/features/auth/data/auth_remote_data_source.dart';
 import 'package:antfish/features/auth/data/auth_repository_impl.dart';
 import 'package:antfish/features/auth/data/google_auth_data_source.dart';
 import 'package:antfish/features/auth/domain/models/register_result.dart';
+import 'package:antfish/features/auth/presentation/widgets/legal_consent_checkboxes.dart';
 import 'package:antfish/l10n/app_strings.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -408,6 +410,93 @@ void main() {
       );
     });
 
+    Future<void> tapCheckbox(WidgetTester tester, Key key) async {
+      final finder = find.byKey(key);
+      await tester.ensureVisible(finder);
+      await tester.pumpAndSettle();
+      await tester.tap(finder);
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> acceptAllLegal(WidgetTester tester) async {
+      await tapCheckbox(tester, LegalConsentCheckboxes.termsCheckboxKey);
+      await tapCheckbox(tester, LegalConsentCheckboxes.privacyCheckboxKey);
+    }
+
+    testWidgets(
+      'registro bloqueado si faltan checkboxes de términos o privacidad',
+      (tester) async {
+        await tester.pumpWidget(wrap(const RegisterScreen()));
+        await tester.enterText(find.byType(TextFormField).at(0), 'Carlos');
+        await tester.enterText(find.byType(TextFormField).at(1), 'nuevo@b.com');
+        await tester.enterText(
+          find.byType(TextFormField).at(2),
+          'PasswordSeguro1',
+        );
+
+        // Sin marcar ninguno: botón bloqueado.
+        await tapSubmit(tester, AppStrings.registerSubmit);
+        await tester.pumpAndSettle();
+        verifyNever(
+          () => repository.register(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+            nombre: any(named: 'nombre'),
+          ),
+        );
+
+        // Solo Términos marcado: sigue bloqueado.
+        await tapCheckbox(tester, LegalConsentCheckboxes.termsCheckboxKey);
+        await tapSubmit(tester, AppStrings.registerSubmit);
+        await tester.pumpAndSettle();
+        verifyNever(
+          () => repository.register(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+            nombre: any(named: 'nombre'),
+          ),
+        );
+
+        // Desmarca Términos y marca solo Aviso de privacidad: sigue bloqueado.
+        await tapCheckbox(tester, LegalConsentCheckboxes.termsCheckboxKey);
+        await tapCheckbox(tester, LegalConsentCheckboxes.privacyCheckboxKey);
+        await tapSubmit(tester, AppStrings.registerSubmit);
+        await tester.pumpAndSettle();
+        verifyNever(
+          () => repository.register(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+            nombre: any(named: 'nombre'),
+          ),
+        );
+      },
+    );
+
+    testWidgets(
+      'enlaces de términos y privacidad muestran el aviso temporal de landing',
+      (tester) async {
+        await tester.pumpWidget(wrap(const RegisterScreen()));
+
+        final termsLink = find.text(AppStrings.authLegalTerms);
+        await tester.ensureVisible(termsLink);
+        await tester.tap(termsLink);
+        await tester.pumpAndSettle();
+
+        expect(find.text(AppStrings.legalLinkPendingBody), findsOneWidget);
+        expect(find.text(LegalLinks.termsUrl), findsOneWidget);
+
+        await tester.tap(find.text(AppStrings.legalLinkPendingClose));
+        await tester.pumpAndSettle();
+
+        final privacyLink = find.text(AppStrings.authLegalPrivacy);
+        await tester.ensureVisible(privacyLink);
+        await tester.tap(privacyLink);
+        await tester.pumpAndSettle();
+
+        expect(find.text(LegalLinks.privacyUrl), findsOneWidget);
+      },
+    );
+
     testWidgets('registro 201 redirige a /verify-email con el correo', (
       tester,
     ) async {
@@ -433,6 +522,7 @@ void main() {
         find.byType(TextFormField).at(2),
         'PasswordSeguro1',
       );
+      await acceptAllLegal(tester);
       await tapSubmit(tester, AppStrings.registerSubmit);
       await tester.pumpAndSettle();
 
@@ -458,6 +548,7 @@ void main() {
         find.byType(TextFormField).at(2),
         'PasswordSeguro1',
       );
+      await acceptAllLegal(tester);
       await tapSubmit(tester, AppStrings.registerSubmit);
       await tester.pumpAndSettle();
 

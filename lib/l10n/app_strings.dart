@@ -115,16 +115,24 @@ abstract final class AppStrings {
       'La contraseña debe tener al menos 8 caracteres.';
   static const String validationFormHasErrors =
       'Revisa los campos marcados para continuar.';
+  static const String validationLegalRequired =
+      'Acepta los Términos y condiciones y el Aviso de privacidad para crear tu cuenta.';
 
   // Proveedores externos y legales
   static const String authDivider = 'o continúa con';
   static const String authGoogle = 'Continuar con Google';
-  static const String authLegalPrefix = 'Al continuar, aceptas nuestros ';
-  static const String authLegalTerms = 'Términos';
-  static const String authLegalAnd = ' y ';
-  static const String authLegalPrivacy = 'Privacidad';
+  static const String registerAcceptTermsPrefix = 'Acepto los ';
+  static const String registerAcceptPrivacyPrefix = 'Acepto el ';
+  static const String authLegalGooglePrefix =
+      'Al ingresar con Google aceptas nuestros ';
+  static const String authLegalTerms = 'Términos y condiciones';
+  static const String authLegalAnd = ' y el ';
+  static const String authLegalPrivacy = 'Aviso de privacidad';
   static const String authPrivacyNote =
       'Tus datos viajan cifrados. Nunca compartimos tu información.';
+  static const String legalLinkPendingBody =
+      'Muy pronto podrás consultar este documento completo desde nuestra landing page oficial.';
+  static const String legalLinkPendingClose = 'Entendido';
 
   // Google Sign-In
   static const String googleSignInSuccess =

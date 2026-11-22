@@ -1,4 +1,5 @@
 import 'package:antfish/app.dart';
+import 'package:antfish/core/config/legal_links.dart';
 import 'package:antfish/core/router/app_routes.dart';
 import 'package:antfish/core/session/session_controller.dart';
 import 'package:antfish/core/session/session_state.dart';
@@ -91,6 +92,55 @@ void main() {
     ) async {
       await _pumpProfile(tester, size: const Size(320, 568), textScale: 2.0);
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+      'Centro de seguridad navega a ForgotPasswordScreen con el correo activo',
+      (tester) async {
+        final storage = _FakeStorage();
+        final session = SessionController(storage);
+        await session.signIn(
+          accessToken: 'acc',
+          refreshToken: 'ref',
+          userEmail: 'carlos@antfish.app',
+          userName: 'Carlos Ramírez',
+        );
+
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+
+        await tester.pumpWidget(
+          AntFishApp(
+            initialRoute: AppRoutes.profile,
+            sessionController: session,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text(AppStrings.profileSecurityTitle));
+        await tester.pumpAndSettle();
+
+        expect(find.text(AppStrings.forgotPasswordTitle), findsOneWidget);
+        expect(find.text('carlos@antfish.app'), findsOneWidget);
+      },
+    );
+
+    testWidgets('Privacidad y Términos muestran sus avisos legales', (
+      tester,
+    ) async {
+      await _pumpProfile(tester);
+
+      await tester.tap(find.text(AppStrings.profilePrivacyTitle));
+      await tester.pumpAndSettle();
+      expect(find.text(LegalLinks.privacyUrl), findsOneWidget);
+
+      await tester.tap(find.text(AppStrings.legalLinkPendingClose));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(AppStrings.profilePreferencesTitle));
+      await tester.pumpAndSettle();
+      expect(find.text(LegalLinks.termsUrl), findsOneWidget);
     });
   });
 }
