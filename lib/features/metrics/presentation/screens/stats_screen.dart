@@ -3,68 +3,127 @@ import 'package:flutter/material.dart';
 import '../../../../core/ui/layout/breakpoints.dart';
 import '../../../../core/ui/theme/app_colors.dart';
 import '../../../../core/ui/theme/app_text_styles.dart';
+import '../../../../core/ui/widgets/app_alert.dart';
+import '../../../../core/ui/widgets/app_buttons.dart';
 import '../../../../core/ui/widgets/glass_panel.dart';
 import '../../../../core/ui/widgets/page_header.dart';
 import '../../../../l10n/app_strings.dart';
+import '../../domain/models/user_metrics.dart';
+import '../metrics_scope.dart';
 
-/// Pantalla de métricas de protección (`StatsScreen` en App.tsx).
-class StatsScreen extends StatelessWidget {
-  const StatsScreen({super.key});
+/// Pantalla de métricas de protección (`StatsScreen`), conectada a
+/// `GET /api/v1/metrics/me` (`docs/contrato_api_v2.md` §3) vía [MetricsScope].
+class StatsScreen extends StatefulWidget {
+  const StatsScreen({super.key, this.metrics});
 
-  static const List<_MetricItemData> _metrics = [
-    _MetricItemData(
-      icon: Icons.center_focus_strong_outlined,
-      value: '148',
-      label: AppStrings.statsMetricTotalScans,
-      sublabel: AppStrings.statsMetricTotalScansSub,
-    ),
-    _MetricItemData(
-      icon: Icons.verified_user_outlined,
-      value: '23',
-      label: AppStrings.statsMetricBlocked,
-      sublabel: AppStrings.statsMetricBlockedSub,
-    ),
-    _MetricItemData(
-      icon: Icons.link_rounded,
-      value: '91',
-      label: AppStrings.statsMetricUrls,
-      sublabel: AppStrings.statsMetricUrlsSub,
-    ),
-    _MetricItemData(
-      icon: Icons.chat_bubble_outline_rounded,
-      value: '57',
-      label: AppStrings.statsMetricSms,
-      sublabel: AppStrings.statsMetricSmsSub,
-    ),
-  ];
+  /// Métricas explícitas opcionales (útil para previsualizaciones y pruebas).
+  /// Si es `null`, lee reactivamente de [MetricsScope] o usa [UserMetrics.empty].
+  final UserMetrics? metrics;
 
-  static const List<_BreakdownRowData> _breakdown = [
+  @override
+  State<StatsScreen> createState() => _StatsScreenState();
+}
+
+class _StatsScreenState extends State<StatsScreen> {
+  bool _requestedInitialLoad = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_requestedInitialLoad || widget.metrics != null) return;
+    final controller = MetricsScope.maybeOf(context);
+    if (controller != null && controller.hasBackend) {
+      _requestedInitialLoad = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) controller.refresh();
+      });
+    }
+  }
+
+  static String _formatLastUpdated(DateTime? date) {
+    if (date == null) return AppStrings.statsNoScansYet;
+    final local = date.toLocal();
+    final day = local.day.toString().padLeft(2, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    final year = local.year.toString();
+    final hour = local.hour.toString().padLeft(2, '0');
+    final minute = local.minute.toString().padLeft(2, '0');
+    return AppStrings.statsLastUpdated('$day/$month/$year $hour:$minute');
+  }
+
+  List<_MetricItemData> _buildMetricCards(UserMetrics metrics) {
+    final blockedPct = metrics.percentOfTotal(metrics.amenazasBloqueadas);
+    final urlPct = metrics.percentOfTotal(metrics.totalUrl);
+    final smsPct = metrics.percentOfTotal(metrics.totalSms);
+
+    return [
+      _MetricItemData(
+        icon: Icons.center_focus_strong_outlined,
+        value: '${metrics.totalEscaneos}',
+        label: AppStrings.statsMetricTotalScans,
+        sublabel: AppStrings.statsMetricTotalScansSub,
+      ),
+      _MetricItemData(
+        icon: Icons.verified_user_outlined,
+        value: '${metrics.amenazasBloqueadas}',
+        label: AppStrings.statsMetricBlocked,
+        sublabel: AppStrings.statsPercentOfTotal(blockedPct),
+      ),
+      _MetricItemData(
+        icon: Icons.link_rounded,
+        value: '${metrics.totalUrl}',
+        label: AppStrings.statsMetricUrls,
+        sublabel: AppStrings.statsPercentOfActivity(urlPct),
+      ),
+      _MetricItemData(
+        icon: Icons.chat_bubble_outline_rounded,
+        value: '${metrics.totalSms}',
+        label: AppStrings.statsMetricSms,
+        sublabel: AppStrings.statsPercentOfActivity(smsPct),
+      ),
+    ];
+  }
+
+  List<_BreakdownRowData> _buildBreakdownRows(UserMetrics metrics) => [
     _BreakdownRowData(
-      label: AppStrings.statsRiskSafe,
-      percent: 71,
+      label: AppStrings.statsRiskSafeOrMedium,
+      percent: metrics.percentOfTotal(metrics.escaneosSinAmenazaCritica),
       color: AppColors.riskSafe,
     ),
     _BreakdownRowData(
-      label: AppStrings.statsRiskMedium,
-      percent: 19,
-      color: AppColors.riskMedium,
-    ),
-    _BreakdownRowData(
-      label: AppStrings.statsRiskHigh,
-      percent: 7,
-      color: AppColors.riskHigh,
-    ),
-    _BreakdownRowData(
-      label: AppStrings.statsRiskCritical,
-      percent: 3,
+      label: AppStrings.statsRiskBlockedThreats,
+      percent: metrics.percentOfTotal(metrics.amenazasBloqueadas),
       color: AppColors.riskCritical,
+    ),
+    _BreakdownRowData(
+      label: AppStrings.statsBreakdownUrls,
+      percent: metrics.percentOfTotal(metrics.totalUrl),
+      color: AppColors.gold,
+    ),
+    _BreakdownRowData(
+      label: AppStrings.statsBreakdownSms,
+      percent: metrics.percentOfTotal(metrics.totalSms),
+      color: AppColors.lilac,
     ),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final controller = MetricsScope.maybeOf(context);
+    final metrics = widget.metrics ?? controller?.metrics ?? UserMetrics.empty;
+    final isLoading =
+        widget.metrics == null && (controller?.isLoading ?? false);
+    final errorMessage = widget.metrics == null
+        ? controller?.errorMessage
+        : null;
+    final hasBackend =
+        widget.metrics == null && (controller?.hasBackend ?? false);
+
     final screenSize = ScreenSize.of(context);
     final bool isExpanded = screenSize.isExpanded;
+    final cards = _buildMetricCards(metrics);
+    final breakdown = _buildBreakdownRows(metrics);
+    final periodLabel = _formatLastUpdated(metrics.ultimaActualizacion);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -75,13 +134,53 @@ class StatsScreen extends StatelessWidget {
           title: AppStrings.statsTitle,
           copy: AppStrings.statsCopy,
         ),
+        if (isLoading) ...[
+          const Padding(
+            padding: EdgeInsets.only(bottom: 14),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.gold,
+                  ),
+                ),
+                SizedBox(width: 10),
+                Text(
+                  AppStrings.statsLoading,
+                  style: TextStyle(
+                    fontFamily: AppTextStyles.body,
+                    fontSize: 13,
+                    color: AppColors.muted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        if (errorMessage != null) ...[
+          AppAlert(message: errorMessage, variant: AlertVariant.error),
+          if (hasBackend) ...[
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: SecondaryButton(
+                label: AppStrings.statsRetry,
+                onPressed: isLoading ? null : () => controller?.refresh(),
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+        ],
         // .metric-grid (4 columnas en >800px, 2x2 en <=800px)
         if (isExpanded)
           Row(
             children: [
-              for (var i = 0; i < _metrics.length; i++) ...[
+              for (var i = 0; i < cards.length; i++) ...[
                 if (i > 0) const SizedBox(width: 12),
-                Expanded(child: _MetricCard(data: _metrics[i])),
+                Expanded(child: _MetricCard(data: cards[i])),
               ],
             ],
           )
@@ -90,17 +189,17 @@ class StatsScreen extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Expanded(child: _MetricCard(data: _metrics[0])),
+                  Expanded(child: _MetricCard(data: cards[0])),
                   const SizedBox(width: 12),
-                  Expanded(child: _MetricCard(data: _metrics[1])),
+                  Expanded(child: _MetricCard(data: cards[1])),
                 ],
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Expanded(child: _MetricCard(data: _metrics[2])),
+                  Expanded(child: _MetricCard(data: cards[2])),
                   const SizedBox(width: 12),
-                  Expanded(child: _MetricCard(data: _metrics[3])),
+                  Expanded(child: _MetricCard(data: cards[3])),
                 ],
               ),
             ],
@@ -115,13 +214,13 @@ class StatsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Wrap(
+              Wrap(
                 alignment: WrapAlignment.spaceBetween,
                 crossAxisAlignment: WrapCrossAlignment.end,
                 spacing: 8,
                 runSpacing: 6,
                 children: [
-                  Column(
+                  const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -142,18 +241,43 @@ class StatsScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  Text(
-                    AppStrings.statsBreakdownPeriod,
-                    style: TextStyle(
-                      fontFamily: AppTextStyles.body,
-                      fontSize: 9,
-                      color: Color(0xFF756B79),
-                    ),
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    children: [
+                      Text(
+                        periodLabel,
+                        style: const TextStyle(
+                          fontFamily: AppTextStyles.body,
+                          fontSize: 12,
+                          color: AppColors.muted,
+                        ),
+                      ),
+                      if (hasBackend)
+                        Semantics(
+                          button: true,
+                          label: AppStrings.statsRefresh,
+                          child: InkWell(
+                            onTap: isLoading
+                                ? null
+                                : () => controller?.refresh(),
+                            borderRadius: BorderRadius.circular(8),
+                            child: const Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Icon(
+                                Icons.refresh_rounded,
+                                size: 18,
+                                color: AppColors.gold,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
               const SizedBox(height: 20),
-              for (final row in _breakdown)
+              for (final row in breakdown)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 6.5),
                   child: _ThreatBreakdownBar(data: row),
@@ -164,8 +288,9 @@ class StatsScreen extends StatelessWidget {
                 AppStrings.statsPersistenceNote,
                 style: TextStyle(
                   fontFamily: AppTextStyles.body,
-                  fontSize: 9,
-                  color: Color(0xFF756B79),
+                  fontSize: 12,
+                  height: 1.45,
+                  color: AppColors.muted,
                 ),
               ),
             ],
@@ -226,22 +351,23 @@ class _MetricCard extends StatelessWidget {
               color: AppColors.textLight,
             ),
           ),
-          const SizedBox(height: 1),
+          const SizedBox(height: 4),
           Text(
             data.label,
             style: const TextStyle(
               fontFamily: AppTextStyles.body,
-              fontSize: 9,
-              color: Color(0xFFA99DAB),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textLight,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 3),
           Text(
             data.sublabel,
             style: const TextStyle(
               fontFamily: AppTextStyles.body,
-              fontSize: 7,
-              color: Color(0xFF685F6C),
+              fontSize: 12,
+              color: AppColors.muted,
             ),
           ),
         ],
@@ -271,23 +397,24 @@ class _ThreatBreakdownBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        SizedBox(
-          width: 85,
+        Flexible(
+          flex: 5,
           child: Text(
             data.label,
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontFamily: AppTextStyles.body,
-              fontSize: 9,
-              color: Color(0xFFA89DAB),
+              fontSize: 12,
+              color: AppColors.muted,
             ),
           ),
         ),
         const SizedBox(width: 10),
         Expanded(
+          flex: 5,
           child: Container(
-            height: 5,
+            height: 6,
             decoration: BoxDecoration(
               color: const Color(0x0EFFFFFF),
               borderRadius: BorderRadius.circular(10),
@@ -306,15 +433,15 @@ class _ThreatBreakdownBar extends StatelessWidget {
         ),
         const SizedBox(width: 10),
         SizedBox(
-          width: 36,
+          width: 44,
           child: Text(
             '${data.percent}%',
             textAlign: TextAlign.right,
             style: const TextStyle(
               fontFamily: AppTextStyles.body,
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: Color(0xFFA89DAB),
+              color: AppColors.textLight,
             ),
           ),
         ),

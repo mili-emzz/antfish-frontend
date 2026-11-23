@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/config/legal_links.dart';
+import '../../../../core/ui/theme/app_colors.dart';
 import '../../../../core/ui/theme/app_text_styles.dart';
 import '../../../../core/ui/widgets/app_buttons.dart';
 import '../../../../core/ui/widgets/labeled_divider.dart';
@@ -28,27 +30,35 @@ class AuthPrivacyNote extends StatelessWidget {
 }
 
 /// Pie común de Login y Registro: separador, Google y aviso legal.
-///
-/// PLANTILLA SIN BACKEND: los botones que requieren integración con el
-/// servidor (`POST /api/v1/auth/google` y enlaces legales) permanecen
-/// deshabilitados (`onPressed: null`).
 class AuthFormFooter extends StatelessWidget {
-  const AuthFormFooter({super.key, this.enabled = false});
+  const AuthFormFooter({
+    super.key,
+    this.enabled = false,
+    this.onGooglePressed,
+    this.onTermsPressed,
+    this.onPrivacyPressed,
+  });
 
-  /// Reservado para activar las acciones cuando se conecte el backend.
+  /// Se deshabilita mientras hay un envío en curso o si no hay repositorio activo.
   final bool enabled;
+
+  /// Acción del botón de Google (`POST /api/v1/auth/google`, RF-06.4).
+  final VoidCallback? onGooglePressed;
+
+  /// Acción opcional al tocar Términos y condiciones.
+  final VoidCallback? onTermsPressed;
+
+  /// Acción opcional al tocar Aviso de privacidad.
+  final VoidCallback? onPrivacyPressed;
 
   @override
   Widget build(BuildContext context) {
-    final legalStyle = AppTextStyles.caption.copyWith(
-      fontSize: 11,
-      color: const Color(0xFF7E7382),
-    );
+    final legalStyle = AppTextStyles.caption;
     final legalLinkStyle = legalStyle.copyWith(
-      color: const Color(0xFFB09BB5),
+      color: AppColors.gold,
       fontWeight: FontWeight.w600,
       decoration: TextDecoration.underline,
-      decorationColor: const Color(0x66B09BB5),
+      decorationColor: const Color(0x66D7BA89),
     );
 
     return Column(
@@ -58,28 +68,28 @@ class AuthFormFooter extends StatelessWidget {
         const SizedBox(height: 26),
         const LabeledDivider(label: AppStrings.authDivider),
         const SizedBox(height: 20),
-        const SecondaryButton(
+        SecondaryButton(
           label: AppStrings.authGoogle,
-          // Deshabilitado hasta conectar google_sign_in → POST /api/v1/auth/google (RF-06.4).
-          onPressed: null,
-          leading: _GoogleGlyph(),
+          onPressed: enabled ? onGooglePressed : null,
+          leading: const _GoogleGlyph(),
         ),
         const SizedBox(height: 12),
         Wrap(
           alignment: WrapAlignment.center,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            Text(AppStrings.authLegalPrefix, style: legalStyle),
+            Text(AppStrings.authLegalGooglePrefix, style: legalStyle),
             LinkButton(
               label: AppStrings.authLegalTerms,
               style: legalLinkStyle,
-              onPressed: null,
+              onPressed: onTermsPressed ?? () => LegalLinks.openTerms(context),
             ),
             Text(AppStrings.authLegalAnd, style: legalStyle),
             LinkButton(
               label: AppStrings.authLegalPrivacy,
               style: legalLinkStyle,
-              onPressed: null,
+              onPressed:
+                  onPrivacyPressed ?? () => LegalLinks.openPrivacy(context),
             ),
           ],
         ),

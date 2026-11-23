@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../l10n/app_strings.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import 'antfish_logo.dart';
 
 /// Marca AntFish: escudo dorado en cristal + nombre (.brand). DESIGN.md §17.
 class BrandMark extends StatelessWidget {
@@ -43,9 +44,8 @@ class BrandMark extends StatelessWidget {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                Icon(
-                  Icons.verified_user_outlined,
-                  size: compact ? 21 : 29,
+                AntFishLogo(
+                  size: compact ? 22 : 30,
                   color: AppColors.gold,
                 ),
                 // Destello (.brand-glint).

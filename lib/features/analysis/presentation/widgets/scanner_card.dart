@@ -7,38 +7,59 @@ import '../../../../core/ui/widgets/glass_panel.dart';
 import '../../../../l10n/app_strings.dart';
 
 /// Tipo de entrada seleccionada en el escáner (`inputType` en App.tsx).
-enum AnalysisInputType { url, sms }
+enum AnalysisInputType {
+  url,
+  sms;
+
+  String get apiValue => this == AnalysisInputType.url ? 'url' : 'sms';
+}
+
+/// Callback con el tipo seleccionado (`url` | `sms`) y el contenido validado.
+typedef AnalysisSubmitCallback = void Function(
+  AnalysisInputType type,
+  String content,
+);
 
 /// Tarjeta interactiva de escaneo (`.scanner-card` en App.tsx).
 ///
-/// PLANTILLA SIN BACKEND:
 /// - Permite conmutar entre `Enlace URL` y `Mensaje SMS`, escribir en el campo
 ///   y limpiar el texto con el botón `×`.
-/// - Nunca persiste el contenido del texto en almacenamiento local (AGENTS.md §8).
-/// - El botón `Analizar ahora` permanece deshabilitado (`onAnalyze == null`)
-///   mientras el endpoint `POST /api/v1/analysis` no esté disponible.
+/// - Nunca persiste el contenido del texto en almacenamiento local (`AGENTS.md` §8).
+/// - Valida límites de longitud del contrato v2 (2,048 URL / 1,600 SMS).
+/// - Deshabilita el botón mientras [isSubmitting] es `true` (`AGENTS.md` §7).
 class ScannerCard extends StatefulWidget {
   const ScannerCard({
     super.key,
     this.initialInputType = AnalysisInputType.url,
     this.onInputTypeChanged,
     this.onAnalyze,
+    this.onAnalyzeSubmit,
+    this.isSubmitting = false,
   });
 
   final AnalysisInputType initialInputType;
   final ValueChanged<AnalysisInputType>? onInputTypeChanged;
 
-  /// Callback opcional para `POST /api/v1/analysis`. Mientras sea `null`
-  /// (sin backend conectado), el botón de análisis permanece deshabilitado.
+  /// Callback simple opcional (compatibilidad).
   final ValueChanged<String>? onAnalyze;
+
+  /// Callback principal conectado a `POST /api/v1/analysis`.
+  final AnalysisSubmitCallback? onAnalyzeSubmit;
+
+  /// Bloquea el botón y muestra estado de carga mientras la petición está activa.
+  final bool isSubmitting;
 
   @override
   State<ScannerCard> createState() => _ScannerCardState();
 }
 
 class _ScannerCardState extends State<ScannerCard> {
+  static const int _maxUrlLength = 2048;
+  static const int _maxSmsLength = 1600;
+
   late AnalysisInputType _inputType = widget.initialInputType;
   final TextEditingController _controller = TextEditingController();
+  String? _validationError;
 
   @override
   void initState() {
@@ -47,6 +68,9 @@ class _ScannerCardState extends State<ScannerCard> {
   }
 
   void _onTextChanged() {
+    if (_validationError != null) {
+      _validationError = null;
+    }
     setState(() {});
   }
 
@@ -59,13 +83,42 @@ class _ScannerCardState extends State<ScannerCard> {
   }
 
   void _selectType(AnalysisInputType type) {
-    if (_inputType == type) return;
-    setState(() => _inputType = type);
+    if (_inputType == type || widget.isSubmitting) return;
+    setState(() {
+      _inputType = type;
+      _validationError = null;
+    });
     widget.onInputTypeChanged?.call(type);
   }
 
   void _clearInput() {
+    if (widget.isSubmitting) return;
     _controller.clear();
+  }
+
+  void _handleSubmit() {
+    if (widget.isSubmitting) return;
+    final trimmed = _controller.text.trim();
+    if (trimmed.isEmpty) return;
+
+    final maxLength = _inputType == AnalysisInputType.url
+        ? _maxUrlLength
+        : _maxSmsLength;
+    if (trimmed.length > maxLength) {
+      setState(() {
+        _validationError = _inputType == AnalysisInputType.url
+            ? AppStrings.analysisUrlTooLong
+            : AppStrings.analysisSmsTooLong;
+      });
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+    if (widget.onAnalyzeSubmit != null) {
+      widget.onAnalyzeSubmit!(_inputType, trimmed);
+    } else if (widget.onAnalyze != null) {
+      widget.onAnalyze!(trimmed);
+    }
   }
 
   @override
@@ -75,9 +128,10 @@ class _ScannerCardState extends State<ScannerCard> {
     final bool isUltraNarrow = screenWidth <= 370;
     final bool isUrl = _inputType == AnalysisInputType.url;
     final bool hasText = _controller.text.trim().isNotEmpty;
-    final VoidCallback? scanAction = widget.onAnalyze != null && hasText
-        ? () => widget.onAnalyze!(_controller.text.trim())
-        : null;
+    final bool hasCallback =
+        widget.onAnalyzeSubmit != null || widget.onAnalyze != null;
+    final VoidCallback? scanAction =
+        hasCallback && hasText && !widget.isSubmitting ? _handleSubmit : null;
 
     return GlassPanel(
       borderRadius: 25,
@@ -109,9 +163,9 @@ class _ScannerCardState extends State<ScannerCard> {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontFamily: AppTextStyles.body,
-                    fontSize: 9,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: 1.35,
+                    letterSpacing: 1.2,
                     color: AppColors.gold,
                   ),
                 ),
@@ -121,9 +175,9 @@ class _ScannerCardState extends State<ScannerCard> {
                   AppStrings.homeScannerEngineStatus,
                   style: TextStyle(
                     fontFamily: AppTextStyles.body,
-                    fontSize: 9,
+                    fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF746B78),
+                    color: AppColors.muted,
                   ),
                 ),
             ],
@@ -133,7 +187,7 @@ class _ScannerCardState extends State<ScannerCard> {
             AppStrings.homeScannerHeading,
             style: TextStyle(
               fontFamily: AppTextStyles.display,
-              fontSize: 21,
+              fontSize: 22,
               fontWeight: FontWeight.w700,
               letterSpacing: -0.63,
               color: AppColors.textLight,
@@ -144,9 +198,9 @@ class _ScannerCardState extends State<ScannerCard> {
             AppStrings.homeCopy,
             style: TextStyle(
               fontFamily: AppTextStyles.body,
-              fontSize: 12,
+              fontSize: 14,
               color: AppColors.muted,
-              height: 1.4,
+              height: 1.5,
             ),
           ),
           const SizedBox(height: 19),
@@ -188,7 +242,11 @@ class _ScannerCardState extends State<ScannerCard> {
             decoration: BoxDecoration(
               color: const Color(0x4D060209),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0x1AFFFFFF)),
+              border: Border.all(
+                color: _validationError != null
+                    ? AppColors.riskCritical.withValues(alpha: 0.6)
+                    : const Color(0x1AFFFFFF),
+              ),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,15 +265,22 @@ class _ScannerCardState extends State<ScannerCard> {
                 Expanded(
                   child: TextField(
                     controller: _controller,
+                    enabled: !widget.isSubmitting,
                     minLines: isUrl ? 1 : 3,
                     maxLines: isUrl ? 2 : 5,
                     keyboardType: isUrl
                         ? TextInputType.url
                         : TextInputType.multiline,
+                    textInputAction: isUrl
+                        ? TextInputAction.done
+                        : TextInputAction.newline,
+                    onSubmitted: isUrl && scanAction != null
+                        ? (_) => _handleSubmit()
+                        : null,
                     style: const TextStyle(
                       fontFamily: AppTextStyles.body,
-                      fontSize: 12,
-                      height: 1.6,
+                      fontSize: 14,
+                      height: 1.55,
                       color: Color(0xFFF5EFF6),
                     ),
                     decoration: InputDecoration(
@@ -229,29 +294,32 @@ class _ScannerCardState extends State<ScannerCard> {
                           : AppStrings.homeInputSmsHint,
                       hintStyle: const TextStyle(
                         fontFamily: AppTextStyles.body,
-                        fontSize: 12,
-                        height: 1.6,
-                        color: Color(0xFF655B69),
+                        fontSize: 14,
+                        height: 1.55,
+                        color: Color(0xFFA69AAA),
                       ),
                     ),
                   ),
                 ),
-                if (_controller.text.isNotEmpty) ...[
-                  const SizedBox(width: 8),
+                if (_controller.text.isNotEmpty && !widget.isSubmitting) ...[
+                  const SizedBox(width: 4),
                   Semantics(
                     button: true,
                     label: AppStrings.homeInputClearSemantics,
                     child: InkWell(
                       onTap: _clearInput,
-                      borderRadius: BorderRadius.circular(8),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 4),
-                        child: Text(
-                          '×',
-                          style: TextStyle(
-                            fontSize: 20,
-                            height: 1,
-                            color: Color(0xFF766A7B),
+                      borderRadius: BorderRadius.circular(10),
+                      child: const SizedBox(
+                        width: 44,
+                        height: 44,
+                        child: Center(
+                          child: Text(
+                            '×',
+                            style: TextStyle(
+                              fontSize: 22,
+                              height: 1,
+                              color: AppColors.muted,
+                            ),
                           ),
                         ),
                       ),
@@ -261,7 +329,18 @@ class _ScannerCardState extends State<ScannerCard> {
               ],
             ),
           ),
-          const SizedBox(height: 9),
+          if (_validationError != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _validationError!,
+              style: const TextStyle(
+                fontFamily: AppTextStyles.body,
+                fontSize: 12,
+                color: AppColors.riskCritical,
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
           // .privacy-note
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 2),
@@ -269,22 +348,22 @@ class _ScannerCardState extends State<ScannerCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: EdgeInsets.only(top: 1),
+                  padding: EdgeInsets.only(top: 2),
                   child: Icon(
                     Icons.lock_outline_rounded,
-                    size: 13,
-                    color: Color(0xFF756B79),
+                    size: 15,
+                    color: AppColors.muted,
                   ),
                 ),
-                SizedBox(width: 5),
+                SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     AppStrings.homePrivacyNote,
                     style: TextStyle(
                       fontFamily: AppTextStyles.body,
-                      fontSize: 9,
-                      color: Color(0xFF756B79),
-                      height: 1.35,
+                      fontSize: 12,
+                      color: AppColors.muted,
+                      height: 1.45,
                     ),
                   ),
                 ),
@@ -292,9 +371,12 @@ class _ScannerCardState extends State<ScannerCard> {
             ),
           ),
           const SizedBox(height: 17),
-          // .scan-button (deshabilitado mientras no exista backend)
+          // .scan-button
           _ScanSubmitButton(
-            label: AppStrings.homeScanSubmit,
+            label: widget.isSubmitting
+                ? AppStrings.homeScanSubmitting
+                : AppStrings.homeScanSubmit,
+            isLoading: widget.isSubmitting,
             onPressed: scanAction,
           ),
         ],
@@ -367,10 +449,15 @@ class _TypeSwitchButton extends StatelessWidget {
 }
 
 class _ScanSubmitButton extends StatelessWidget {
-  const _ScanSubmitButton({required this.label, required this.onPressed});
+  const _ScanSubmitButton({
+    required this.label,
+    required this.onPressed,
+    this.isLoading = false,
+  });
 
   final String label;
   final VoidCallback? onPressed;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -382,7 +469,7 @@ class _ScanSubmitButton extends StatelessWidget {
       enabled: enabled,
       label: label,
       child: Opacity(
-        opacity: enabled ? 1.0 : 0.55,
+        opacity: enabled || isLoading ? 1.0 : 0.55,
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: radius,
@@ -422,11 +509,19 @@ class _ScanSubmitButton extends StatelessWidget {
                           color: const Color(0xFF37203D),
                           borderRadius: BorderRadius.circular(9),
                         ),
-                        child: const Icon(
-                          Icons.center_focus_strong_outlined,
-                          size: 18,
-                          color: AppColors.gold,
-                        ),
+                        child: isLoading
+                            ? const Padding(
+                                padding: EdgeInsets.all(7),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.gold,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.center_focus_strong_outlined,
+                                size: 18,
+                                color: AppColors.gold,
+                              ),
                       ),
                       const SizedBox(width: 11),
                       Flexible(

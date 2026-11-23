@@ -1,0 +1,7 @@
+# Copia como android/key.properties (ignorado por git) y completa los valores.
+# Generar keystore:
+#   keytool -genkey -v -keystore antfish-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias antfish
+storePassword=
+keyPassword=
+keyAlias=antfish
+storeFile=C:/ruta/segura/antfish-release.jks

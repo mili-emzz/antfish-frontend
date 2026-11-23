@@ -1,16 +1,80 @@
 import 'package:antfish/app.dart';
 import 'package:antfish/core/router/app_routes.dart';
-import 'package:antfish/features/analysis/presentation/screens/home_screen.dart';
-import 'package:antfish/features/analysis/presentation/widgets/risk_traffic_light_card.dart';
-import 'package:antfish/features/analysis/presentation/widgets/scanner_card.dart';
+import 'package:antfish/core/ui/widgets/risk_badge.dart';
+import 'package:antfish/features/analysis/analysis.dart';
 import 'package:antfish/l10n/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+class _FakeAnalysisRepository implements AnalysisRepository {
+  _FakeAnalysisRepository(this.sample);
+
+  final AnalysisResult sample;
+
+  @override
+  Future<AnalysisResult> analyze({
+    required String tipoEntrada,
+    required String contenido,
+  }) async => sample;
+
+  @override
+  Future<AnalysisHistoryPage> getHistory({
+    int limit = 20,
+    String? cursor,
+  }) async => AnalysisHistoryPage(items: [sample]);
+
+  @override
+  Future<AnalysisResult> getAnalysisById(String id) async => sample;
+
+  @override
+  Future<void> deleteAnalysis(String id) async {}
+}
+
+final _sampleAnalysis = AnalysisResult(
+  id: 'an-001',
+  tipoEntrada: 'url',
+  scoreTotal: 92,
+  nivelRiesgo: RiskLevel.critico,
+  puntosPorCapa: const {'apis': 60, 'url': 32},
+  analisisParcial: true,
+  fechaAnalisis: DateTime(2026, 11, 20, 12, 0),
+  motivoCortocircuito: 'lista_negra',
+  urlsExtraidas: const [
+    ExtractedUrl(
+      url: 'https://secure-bbva-access.xyz/login',
+      dominio: 'secure-bbva-access.xyz',
+    ),
+    ExtractedUrl(
+      url: 'https://bit.ly/promo-bbva',
+      dominio: 'bit.ly',
+      flagsSintacticos: ['acortador_url'],
+    ),
+  ],
+  hallazgos: const [
+    AnalysisFinding(
+      reglaCodigo: 'BL_01',
+      titulo: 'Dominio reportado en lista negra',
+      descripcion: 'El dominio coincide con campañas activas de phishing.',
+      puntos: 85,
+    ),
+  ],
+  recomendaciones: const ['No ingreses credenciales ni abras este enlace.'],
+  fuentesConsultadas: const [
+    ConsultedSource(
+      api: 'Google Web Risk',
+      estado: 'ok',
+      positivo: true,
+      detecciones: 2,
+      desdeCache: false,
+    ),
+  ],
+);
 
 Future<void> _pumpHome(
   WidgetTester tester, {
   Size size = const Size(390, 844),
   double textScale = 1.0,
+  AnalysisRepository? analysisRepository,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1.0;
@@ -18,23 +82,29 @@ Future<void> _pumpHome(
   tester.platformDispatcher.textScaleFactorTestValue = textScale;
   addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
-  await tester.pumpWidget(const AntFishApp(initialRoute: AppRoutes.home));
+  await tester.pumpWidget(
+    AntFishApp(
+      initialRoute: AppRoutes.home,
+      analysisRepository: analysisRepository,
+    ),
+  );
   await tester.pumpAndSettle();
 }
 
 void main() {
   group('HomeScreen (Fase 2)', () {
-    testWidgets('Renderiza cabecera, saludo, escáner, semáforo y recientes', (
-      tester,
-    ) async {
-      await _pumpHome(tester);
+    testWidgets(
+      'Renderiza cabecera, saludo, escáner y semáforo sin recientes',
+      (tester) async {
+        await _pumpHome(tester);
 
-      expect(find.byType(HomeScreen), findsOneWidget);
-      expect(find.text(AppStrings.homeGreeting), findsOneWidget);
-      expect(find.byType(ScannerCard), findsOneWidget);
-      expect(find.byType(RiskTrafficLightCard), findsOneWidget);
-      expect(find.text(AppStrings.recentTitle), findsOneWidget);
-    });
+        expect(find.byType(HomeScreen), findsOneWidget);
+        expect(find.text(AppStrings.homeGreeting), findsOneWidget);
+        expect(find.byType(ScannerCard), findsOneWidget);
+        expect(find.byType(RiskTrafficLightCard), findsOneWidget);
+        expect(find.text(AppStrings.recentTitle), findsNothing);
+      },
+    );
 
     testWidgets('Conmutador URL / SMS cambia el hint del campo', (
       tester,
@@ -115,6 +185,77 @@ void main() {
 
       expect(find.byType(ResultCard), findsNothing);
       expect(find.byType(RiskTrafficLightCard), findsOneWidget);
+    });
+
+    testWidgets('Analizar con backend abre AnalysisReportSheet completo', (
+      tester,
+    ) async {
+      await _pumpHome(
+        tester,
+        analysisRepository: _FakeAnalysisRepository(_sampleAnalysis),
+      );
+
+      await tester.enterText(
+        find.byType(TextField),
+        'https://secure-bbva-access.xyz/login',
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(AppStrings.homeScanSubmit));
+      await tester.pumpAndSettle();
+
+      final sheet = find.byType(AnalysisReportSheet);
+      expect(sheet, findsOneWidget);
+      expect(
+        find.descendant(
+          of: sheet,
+          matching: find.text(AppStrings.analysisDetailTitle),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: sheet,
+          matching: find.text(AppStrings.resultPartialWarning),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: sheet,
+          matching: find.text('https://secure-bbva-access.xyz/login'),
+        ),
+        findsOneWidget,
+      );
+      final findingFinder = find.descendant(
+        of: sheet,
+        matching: find.text('Dominio reportado en lista negra'),
+      );
+      await tester.scrollUntilVisible(
+        findingFinder,
+        250,
+        scrollable: find
+            .descendant(of: sheet, matching: find.byType(Scrollable))
+            .first,
+      );
+      await tester.pumpAndSettle();
+
+      expect(findingFinder, findsOneWidget);
+
+      final disclaimerFinder = find.descendant(
+        of: sheet,
+        matching: find.text(AppStrings.analysisDisclaimerTitle),
+      );
+      await tester.scrollUntilVisible(
+        disclaimerFinder,
+        250,
+        scrollable: find
+            .descendant(of: sheet, matching: find.byType(Scrollable))
+            .first,
+      );
+      await tester.pumpAndSettle();
+
+      expect(disclaimerFinder, findsOneWidget);
     });
 
     testWidgets('Sin overflow en pantallas de 320x568 y texto al 200 %', (

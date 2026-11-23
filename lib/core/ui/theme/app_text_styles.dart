@@ -13,9 +13,9 @@ abstract final class AppTextStyles {
   /// Etiqueta superior en mayúsculas con tracking amplio (.eyebrow).
   static const TextStyle eyebrow = TextStyle(
     fontFamily: body,
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: FontWeight.w700,
-    letterSpacing: 2,
+    letterSpacing: 1.5,
     color: AppColors.gold,
   );
 
@@ -41,8 +41,8 @@ abstract final class AppTextStyles {
 
   static const TextStyle bodyMuted = TextStyle(
     fontFamily: body,
-    fontSize: 13,
-    height: 1.45,
+    fontSize: 14,
+    height: 1.5,
     color: AppColors.muted,
   );
 
@@ -50,53 +50,53 @@ abstract final class AppTextStyles {
     fontFamily: body,
     fontSize: 16,
     height: 1.65,
-    color: Color(0xFFBBB0BE),
+    color: Color(0xFFD0C6D4),
   );
 
   static const TextStyle fieldLabel = TextStyle(
     fontFamily: body,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: FontWeight.w500,
-    color: Color(0xFFBDB1C0),
+    color: Color(0xFFD2C7D6),
   );
 
   static const TextStyle fieldInput = TextStyle(
     fontFamily: body,
-    fontSize: 14,
+    fontSize: 15,
     color: Color(0xFFF9F4FA),
   );
 
   static const TextStyle fieldHint = TextStyle(
     fontFamily: body,
-    fontSize: 14,
-    color: Color(0xFF7A6F7E),
+    fontSize: 15,
+    color: Color(0xFFA69AAA),
   );
 
   static const TextStyle fieldHelper = TextStyle(
     fontFamily: body,
-    fontSize: 11,
-    height: 1.35,
-    color: Color(0xFF948899),
+    fontSize: 12,
+    height: 1.45,
+    color: AppColors.muted,
   );
 
   static const TextStyle button = TextStyle(
     fontFamily: body,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: FontWeight.w700,
   );
 
   static const TextStyle link = TextStyle(
     fontFamily: body,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: FontWeight.w600,
     color: AppColors.gold,
   );
 
   static const TextStyle caption = TextStyle(
     fontFamily: body,
-    fontSize: 11,
+    fontSize: 12,
     height: 1.5,
-    color: Color(0xFF8A7E8E),
+    color: AppColors.muted,
   );
 
   static const TextStyle brandName = TextStyle(
@@ -109,9 +109,9 @@ abstract final class AppTextStyles {
 
   static const TextStyle brandTagline = TextStyle(
     fontFamily: body,
-    fontSize: 9,
+    fontSize: 12,
     fontWeight: FontWeight.w600,
-    letterSpacing: 1.8,
+    letterSpacing: 1.2,
     color: AppColors.muted,
   );
 
@@ -128,7 +128,7 @@ abstract final class AppTextStyles {
   /// Subtítulo descriptivo de pantallas internas (.page-header > p).
   static const TextStyle pageHeaderCopy = TextStyle(
     fontFamily: body,
-    fontSize: 12,
+    fontSize: 14,
     height: 1.5,
     color: AppColors.muted,
   );
@@ -136,8 +136,8 @@ abstract final class AppTextStyles {
   /// Etiqueta de ítem en barra de navegación inferior (.bottom-nav span/small).
   static const TextStyle bottomNavLabel = TextStyle(
     fontFamily: body,
-    fontSize: 9,
-    fontWeight: FontWeight.w500,
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
     height: 1.2,
   );
 }

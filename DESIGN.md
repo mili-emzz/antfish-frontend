@@ -50,7 +50,7 @@ Los mensajes sobre cifrado, privacidad y tratamiento de datos deben estar presen
 | `--plum` | `#462255` | Morado principal, fondos y superficies activas |
 | `--lilac` | `#B47EB3` | Resplandores, inteligencia y estados secundarios |
 | `--gold` | `#D7BA89` | Acciones, protección y destacados |
-| `--muted` | `#AA9EAE` | Texto secundario |
+| `--muted` | `#C4B9C9` | Texto secundario con contraste WCAG AA (`>= 4.5:1`) |
 
 ### Fondos
 
@@ -92,9 +92,9 @@ Las fuentes se cargan desde Google Fonts en `src/index.css`.
 | Hero de autenticación | `42–67px` | `700–800` |
 | Título de página | `27–38px` | `700` |
 | Título de tarjeta | `18–24px` | `600–700` |
-| Texto base | `12–16px` | `400–500` |
-| Etiqueta | `9–11px` | `600–700` |
-| Metadato | `8–10px` | `400–500` |
+| Texto base | `14–16px` | `400–500` |
+| Etiqueta | `12–13px` | `600–700` |
+| Metadato | `12px` (piso mínimo WCAG móvil) | `400–500` |
 
 ### Reglas
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/ui/theme/app_colors.dart';
 import '../../../../core/ui/theme/app_text_styles.dart';
+import '../../../../core/ui/widgets/antfish_logo.dart';
 import '../../../../core/ui/widgets/brand_mark.dart';
 import '../../../../l10n/app_strings.dart';
 
@@ -152,10 +153,11 @@ class _ShieldOrbit extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Icon(
-                Icons.fingerprint,
-                size: 58 * scale,
-                color: AppColors.gold,
+              child: Center(
+                child: AntFishLogo(
+                  size: 64 * scale,
+                  color: AppColors.gold,
+                ),
               ),
             ),
           ],

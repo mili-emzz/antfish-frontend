@@ -62,6 +62,37 @@ abstract final class AppStrings {
   static const String verifyChangeEmail = 'Cambiar correo electrónico';
   static const String verifyTemplateNotice =
       'Vista de plantilla: la verificación y el reenvío se activarán al conectar el servidor.';
+  static const String verifySuccessDefault =
+      'Cuenta verificada exitosamente. Ya puedes iniciar sesión.';
+  static const String verifyResendDefault =
+      'Si la cuenta está pendiente de verificación, se envió un nuevo código.';
+  static String verifyResendCooldown(int seconds) =>
+      'Reenviar código (${seconds}s)';
+
+  // Recuperación de contraseña (POST /auth/password/forgot y /reset)
+  static const String forgotPasswordEyebrow = 'RECUPERACIÓN SEGURA';
+  static const String forgotPasswordTitle = 'Recupera tu contraseña';
+  static const String forgotPasswordSubtitle =
+      'Ingresa tu correo y te enviaremos un código de 6 dígitos para restablecerla.';
+  static const String forgotPasswordSubmit = 'Enviar código de recuperación';
+  static const String forgotPasswordBackToLogin = 'Volver a iniciar sesión';
+  static const String forgotPasswordSuccessDefault =
+      'Si el correo corresponde a una cuenta activa, recibirás un código de recuperación.';
+
+  static const String resetPasswordEyebrow = 'NUEVA CONTRASEÑA';
+  static const String resetPasswordTitle = 'Restablece tu acceso';
+  static const String resetPasswordSubtitlePrefix =
+      'Ingresa el código de 6 dígitos enviado a ';
+  static const String resetPasswordSubtitleFallback =
+      'Ingresa tu correo, el código de 6 dígitos y tu nueva contraseña.';
+  static const String resetPasswordCodeLabel = 'Código de recuperación';
+  static const String resetPasswordCodeSemantics =
+      'Código de recuperación de 6 dígitos';
+  static const String resetPasswordNewLabel = 'Nueva contraseña';
+  static const String resetPasswordSubmit = 'Restablecer contraseña';
+  static const String resetPasswordRequestAgain = 'Solicitar otro código';
+  static const String resetPasswordSuccessDefault =
+      'Contraseña restablecida exitosamente. Ya puedes iniciar sesión con tu nueva contraseña.';
 
   // Campos
   static const String fieldNameLabel = 'Nombre';
@@ -84,16 +115,42 @@ abstract final class AppStrings {
       'La contraseña debe tener al menos 8 caracteres.';
   static const String validationFormHasErrors =
       'Revisa los campos marcados para continuar.';
+  static const String validationLegalRequired =
+      'Acepta los Términos y condiciones y el Aviso de privacidad para crear tu cuenta.';
 
   // Proveedores externos y legales
   static const String authDivider = 'o continúa con';
   static const String authGoogle = 'Continuar con Google';
-  static const String authLegalPrefix = 'Al continuar, aceptas nuestros ';
-  static const String authLegalTerms = 'Términos';
-  static const String authLegalAnd = ' y ';
-  static const String authLegalPrivacy = 'Privacidad';
+  static const String registerAcceptTermsPrefix = 'Acepto los ';
+  static const String registerAcceptPrivacyPrefix = 'Acepto el ';
+  static const String authLegalGooglePrefix =
+      'Al ingresar con Google aceptas nuestros ';
+  static const String authLegalTerms = 'Términos y condiciones';
+  static const String authLegalAnd = ' y el ';
+  static const String authLegalPrivacy = 'Aviso de privacidad';
   static const String authPrivacyNote =
       'Tus datos viajan cifrados. Nunca compartimos tu información.';
+  static const String legalLinkPendingBody =
+      'Muy pronto podrás consultar este documento completo desde nuestra landing page oficial.';
+  static const String legalLinkPendingClose = 'Entendido';
+
+  // Google Sign-In
+  static const String googleSignInSuccess =
+      'Sesión iniciada con Google correctamente.';
+  static const String googleEmailNotVerified =
+      'Google indica que ese correo no está verificado. Usa otra cuenta.';
+  static const String googleInvalidCredential =
+      'No se pudo validar tu cuenta de Google. Inténtalo de nuevo.';
+  static const String googleNoCredential =
+      'No se pudo obtener la credencial de Google.';
+  static const String googleGenericError =
+      'No se pudo iniciar sesión con Google. Inténtalo de nuevo.';
+  static const String googleWebUnsupported =
+      'El inicio con Google directo desde este botón requiere probar en Android/iOS o usar una sesión de Google activa en el navegador.';
+  static const String serverInvalidResponse =
+      'Respuesta inesperada del servidor.';
+  static const String authGenericError =
+      'No se pudo completar la operación. Inténtalo de nuevo.';
 
   // Estados de plantilla (sin backend)
   static const String templateBackendPending =
@@ -147,6 +204,58 @@ abstract final class AppStrings {
       'Detectamos una posible suplantación de identidad y reputación negativa.';
   static const String resultFindingDeceptiveDomain = 'Dominio engañoso';
   static const String resultFindingBlacklist = 'Lista negra';
+  static const String resultSafeTitle = 'No se detectaron amenazas críticas';
+  static const String resultSafeCopy =
+      'Las señales analizadas no muestran indicios claros de fraude.';
+  static const String resultMediumTitle = 'Procede con precaución';
+  static const String resultMediumCopy =
+      'Se detectaron algunas señales inusuales. Verifica la fuente antes de continuar.';
+  static const String resultHighTitle = 'Riesgo alto detectado';
+  static const String resultHighCopy =
+      'Recomendamos no abrir este enlace ni compartir datos personales.';
+  static const String resultPartialWarning =
+      'Análisis preliminar: alguna fuente externa no respondió a tiempo.';
+  static const String resultShortCircuitBlacklist = 'Detectado en lista negra';
+  static const String resultShortCircuitImpersonation =
+      'Posible suplantación de marca';
+  static const String resultLayerApis = 'APIs';
+  static const String resultLayerUrl = 'URL';
+  static const String resultLayerText = 'Texto';
+  static const String resultViewDetail = 'Ver detalle completo';
+  static const String analysisSubmitError =
+      'No se pudo completar el análisis. Inténtalo de nuevo.';
+  static const String analysisUrlTooLong =
+      'La URL supera el límite máximo de 2,048 caracteres.';
+  static const String analysisSmsTooLong =
+      'El mensaje SMS supera el límite máximo de 1,600 caracteres.';
+  static const String analysisDetailTitle = 'Detalle del análisis';
+  static const String analysisDetailLayersTitle = 'Puntaje por capa';
+  static const String analysisDetailPrimaryUrl = 'URL principal';
+  static const String analysisDetailSecondaryUrl =
+      'URL secundaria (solo señales sintácticas)';
+  static const String analysisDetailFindingsTitle = 'Hallazgos detectados';
+  static const String analysisDetailRecommendationsTitle = 'Recomendaciones';
+  static const String analysisDisclaimerTitle =
+      'Aviso sobre fuentes y precisión';
+  static const String analysisDisclaimerBody =
+      'Este diagnóstico es orientativo y sus puntajes y porcentajes son una estimación basada en nuestro motor heurístico y en servicios externos de terceros (Google Web Risk, VirusTotal y PhishTank). Estas fuentes pueden contener falsos positivos, falsos negativos o retrasos ante amenazas recientes, por lo que un resultado bajo no garantiza que el enlace o mensaje sea 100 % seguro. AntFish no sustituye tu criterio ni asume responsabilidad por decisiones, accesos o pérdidas derivadas del uso de esta información.';
+  static const String analysisDetailSourcesTitle = 'Fuentes consultadas';
+  static const String analysisDetailClose = 'Cerrar';
+  static const String analysisDetailDelete = 'Eliminar del historial';
+  static const String analysisDeleteConfirmTitle = 'Eliminar análisis';
+  static const String analysisDeleteConfirmCopy =
+      'Se eliminará este registro de tu historial. Los contadores históricos de métricas no se reducirán.';
+  static const String analysisDeleteSuccess =
+      'Análisis eliminado del historial.';
+  static const String analysisDeleteError =
+      'No se pudo eliminar el análisis. Inténtalo de nuevo.';
+  static const String historyLoading = 'Cargando historial...';
+  static const String historyLoadError =
+      'No se pudo cargar tu historial. Inténtalo de nuevo.';
+  static const String historyEmpty =
+      'Aún no tienes análisis registrados en tu historial.';
+  static const String historyLoadMore = 'Cargar más';
+  static String homeGreetingFor(String firstName) => 'Hola, $firstName';
 
   // Actividad reciente e historial (App.tsx)
   static const String recentEyebrow = 'ACTIVIDAD';
@@ -160,7 +269,7 @@ abstract final class AppStrings {
   static const String historyFilterUrls = 'Enlaces';
   static const String historyFilterSms = 'Mensajes';
 
-  // Métricas (StatsScreen)
+  // Métricas (StatsScreen - GET /api/v1/metrics/me)
   static const String statsEyebrow = 'TU IMPACTO';
   static const String statsTitle = 'Métricas de protección';
   static const String statsCopy =
@@ -169,20 +278,26 @@ abstract final class AppStrings {
   static const String statsMetricTotalScans = 'Escaneos totales';
   static const String statsMetricTotalScansSub = 'Histórico acumulado';
   static const String statsMetricBlocked = 'Amenazas bloqueadas';
-  static const String statsMetricBlockedSub = '15.5% del total';
   static const String statsMetricUrls = 'Enlaces analizados';
-  static const String statsMetricUrlsSub = '61% de actividad';
   static const String statsMetricSms = 'SMS analizados';
-  static const String statsMetricSmsSub = '39% de actividad';
+  static String statsPercentOfTotal(int percent) => '$percent% del total';
+  static String statsPercentOfActivity(int percent) => '$percent% de actividad';
   static const String statsBreakdownEyebrow = 'DESGLOSE';
   static const String statsBreakdownTitle = 'Nivel de riesgo';
-  static const String statsBreakdownPeriod = 'Historial completo';
-  static const String statsRiskSafe = 'Seguro';
-  static const String statsRiskMedium = 'Riesgo medio';
-  static const String statsRiskHigh = 'Riesgo alto';
-  static const String statsRiskCritical = 'Crítico';
+  static const String statsNoScansYet = 'Sin escaneos registrados';
+  static String statsLastUpdated(String formattedDate) =>
+      'Actualizado: $formattedDate';
+  static const String statsRiskSafeOrMedium = 'Seguro / precaución';
+  static const String statsRiskBlockedThreats = 'Amenazas (alto / crítico)';
+  static const String statsBreakdownUrls = 'Enlaces URL';
+  static const String statsBreakdownSms = 'Mensajes SMS';
   static const String statsPersistenceNote =
       'Eliminar un análisis del historial no reduce los contadores históricos.';
+  static const String statsLoading = 'Actualizando métricas...';
+  static const String statsRetry = 'Reintentar';
+  static const String statsRefresh = 'Actualizar';
+  static const String metricsLoadError =
+      'No se pudieron cargar tus métricas. Inténtalo de nuevo.';
 
   // Perfil (ProfileScreen en App.tsx)
   static const String profileEyebrow = 'CUENTA PROTEGIDA';
@@ -193,9 +308,26 @@ abstract final class AppStrings {
   static const String profileSecurityTitle = 'Centro de seguridad';
   static const String profileSecuritySubtitle = 'Cambiar contraseña';
   static const String profilePrivacyTitle = 'Privacidad';
-  static const String profilePrivacySubtitle = 'Lee nuestro aviso de privacidad';
+  static const String profilePrivacySubtitle =
+      'Lee nuestro aviso de privacidad';
   static const String profilePreferencesTitle = 'Términos y condiciones';
-  static const String profilePreferencesSubtitle = 'Conoce los términos del servicio';
+  static const String profilePreferencesSubtitle =
+      'Conoce los términos del servicio';
   static const String profileLogout = 'Cerrar sesión';
+  static const String profileDeleteAccount = 'Eliminar cuenta';
+  static const String deleteAccountDialogTitle = 'Eliminar cuenta';
+  static const String deleteAccountDialogCopy =
+      'Esta acción es definitiva. Se anonimizará tu cuenta y se eliminará todo tu historial de análisis y métricas.';
+  static const String deleteAccountPasswordLabel = 'Contraseña actual';
+  static const String deleteAccountPasswordHint =
+      'Confirma tu contraseña para continuar';
+  static const String deleteAccountGoogleHint =
+      'Por seguridad, verifica nuevamente tu identidad con Google para confirmar la baja definitiva.';
+  static const String deleteAccountCancel = 'Cancelar';
+  static const String deleteAccountConfirm = 'Eliminar definitivamente';
+  static const String deleteAccountConfirmGoogle =
+      'Verificar con Google y eliminar';
+  static const String deleteAccountSuccess =
+      'Tu cuenta fue eliminada definitivamente.';
   static const String profileVersion = 'AntFish 1.0 · Tu escudo digital';
 }

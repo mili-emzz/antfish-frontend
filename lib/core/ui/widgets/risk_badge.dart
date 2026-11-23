@@ -9,10 +9,31 @@ enum RiskLevel {
   alto,
   critico;
 
+  /// Convierte el valor textual del backend (`bajo | medio | alto | critico`)
+  /// sin recalcular nunca el score en el cliente (`AGENTS.md` §9).
+  static RiskLevel fromApi(String? raw, {int? fallbackScore}) {
+    switch (raw?.trim().toLowerCase()) {
+      case 'bajo':
+        return RiskLevel.bajo;
+      case 'medio':
+        return RiskLevel.medio;
+      case 'alto':
+        return RiskLevel.alto;
+      case 'critico':
+        return RiskLevel.critico;
+      default:
+        return fallbackScore != null
+            ? fromScore(fallbackScore)
+            : RiskLevel.bajo;
+    }
+  }
+
+  /// Fallback según los rangos del contrato v2 (`docs/contrato_api_v2.md`):
+  /// bajo (0-29), medio (30-59), alto (60-84), critico (85-100).
   static RiskLevel fromScore(int score) {
-    if (score < 20) return RiskLevel.bajo;
-    if (score < 50) return RiskLevel.medio;
-    if (score < 80) return RiskLevel.alto;
+    if (score < 30) return RiskLevel.bajo;
+    if (score < 60) return RiskLevel.medio;
+    if (score < 85) return RiskLevel.alto;
     return RiskLevel.critico;
   }
 
@@ -89,13 +110,16 @@ class RiskBadge extends StatelessWidget {
         children: [
           Icon(level.icon, color: color, size: compact ? 16 : 20),
           const SizedBox(width: 6),
-          Text(
-            score != null ? '${level.label} ($score/100)' : level.label,
-            style: TextStyle(
-              color: color,
-              fontFamily: 'DM Sans',
-              fontWeight: FontWeight.w700,
-              fontSize: compact ? 12 : 14,
+          Flexible(
+            child: Text(
+              score != null ? '${level.label} ($score/100)' : level.label,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: color,
+                fontFamily: 'DM Sans',
+                fontWeight: FontWeight.w700,
+                fontSize: compact ? 12 : 14,
+              ),
             ),
           ),
         ],
