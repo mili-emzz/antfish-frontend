@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:antfish/core/network/api_client.dart';
 import 'package:antfish/core/network/auth_interceptor.dart';
 import 'package:antfish/core/session/session_controller.dart';
 import 'package:antfish/core/session/session_state.dart';
@@ -197,4 +198,39 @@ void main() {
       expect(await storage.readRefreshToken(), isNull);
     },
   );
+
+  group('resolveHealthCheckUrl y verifyBackendHealth', () {
+    setUp(resetApiClientStartupCheckForTesting);
+
+    test('resuelve /health en la raíz del servidor cuando API_BASE_URL termina en /api/v1', () {
+      expect(
+        resolveHealthCheckUrl('https://184-193-101-215.sslip.io/api/v1'),
+        'https://184-193-101-215.sslip.io/health',
+      );
+      expect(
+        resolveHealthCheckUrl('https://184-193-101-215.sslip.io/api/v1/'),
+        'https://184-193-101-215.sslip.io/health',
+      );
+    });
+
+    test(
+      'verifyBackendHealth retorna true cuando /health responde 200 OK',
+      () async {
+        String? requestedUri;
+        final dio = createApiClient(
+          baseUrl: 'https://184-193-101-215.sslip.io/api/v1',
+          runStartupHealthCheck: false,
+        );
+        dio.httpClientAdapter = _FakeAdapter((options) async {
+          requestedUri = options.uri.toString();
+          return _jsonBody({'status': 'ok'}, 200);
+        });
+
+        final ok = await verifyBackendHealth(dio: dio);
+
+        expect(ok, isTrue);
+        expect(requestedUri, 'https://184-193-101-215.sslip.io/health');
+      },
+    );
+  });
 }
