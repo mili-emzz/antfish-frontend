@@ -473,8 +473,15 @@ void main() {
     );
 
     testWidgets(
-      'enlaces de términos y privacidad muestran el aviso temporal de landing',
+      'enlaces de términos y privacidad abren las URLs oficiales directamente',
       (tester) async {
+        final launchedUrls = <String>[];
+        LegalLinks.urlLauncherOverride = (uri) async {
+          launchedUrls.add(uri.toString());
+          return true;
+        };
+        addTearDown(() => LegalLinks.urlLauncherOverride = null);
+
         await tester.pumpWidget(wrap(const RegisterScreen()));
 
         final termsLink = find.text(AppStrings.authLegalTerms);
@@ -482,18 +489,14 @@ void main() {
         await tester.tap(termsLink);
         await tester.pumpAndSettle();
 
-        expect(find.text(AppStrings.legalLinkPendingBody), findsOneWidget);
-        expect(find.text(LegalLinks.termsUrl), findsOneWidget);
-
-        await tester.tap(find.text(AppStrings.legalLinkPendingClose));
-        await tester.pumpAndSettle();
+        expect(launchedUrls, contains(LegalLinks.termsUrl));
 
         final privacyLink = find.text(AppStrings.authLegalPrivacy);
         await tester.ensureVisible(privacyLink);
         await tester.tap(privacyLink);
         await tester.pumpAndSettle();
 
-        expect(find.text(LegalLinks.privacyUrl), findsOneWidget);
+        expect(launchedUrls, contains(LegalLinks.privacyUrl));
       },
     );
 

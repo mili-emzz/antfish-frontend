@@ -126,21 +126,25 @@ void main() {
       },
     );
 
-    testWidgets('Privacidad y Términos muestran sus avisos legales', (
+    testWidgets('Privacidad y Términos abren sus enlaces oficiales', (
       tester,
     ) async {
+      final launchedUrls = <String>[];
+      LegalLinks.urlLauncherOverride = (uri) async {
+        launchedUrls.add(uri.toString());
+        return true;
+      };
+      addTearDown(() => LegalLinks.urlLauncherOverride = null);
+
       await _pumpProfile(tester);
 
       await tester.tap(find.text(AppStrings.profilePrivacyTitle));
       await tester.pumpAndSettle();
-      expect(find.text(LegalLinks.privacyUrl), findsOneWidget);
-
-      await tester.tap(find.text(AppStrings.legalLinkPendingClose));
-      await tester.pumpAndSettle();
+      expect(launchedUrls, contains(LegalLinks.privacyUrl));
 
       await tester.tap(find.text(AppStrings.profilePreferencesTitle));
       await tester.pumpAndSettle();
-      expect(find.text(LegalLinks.termsUrl), findsOneWidget);
+      expect(launchedUrls, contains(LegalLinks.termsUrl));
     });
   });
 }
